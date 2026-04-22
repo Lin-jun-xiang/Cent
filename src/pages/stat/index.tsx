@@ -35,6 +35,7 @@ import {
 import { TagItem } from "@/components/stat/static-item";
 import { Button } from "@/components/ui/button";
 import WidgetPreview from "@/components/widget/preview";
+import { useCreators } from "@/hooks/use-creator";
 import { useCurrency } from "@/hooks/use-currency";
 import {
     DefaultFilterViewId,
@@ -165,11 +166,24 @@ export default function Page() {
     const [focusType, setFocusType] = useState<FocusType>("expense");
     const [dimension, setDimension] = useState<"category" | "user">("category");
 
+    // --- 全局记帐者筛选 ---
+    const creators = useCreators();
+    const [selectedCreatorIds, setSelectedCreatorIds] = useState<Set<string>>(
+        () => new Set(),
+    );
+    const isAllCreatorsSelected = selectedCreatorIds.size === 0;
+    const filteredByCreator = useMemo(() => {
+        if (isAllCreatorsSelected) return filtered;
+        return filtered.filter((b) =>
+            selectedCreatorIds.has(String(b.creatorId)),
+        );
+    }, [filtered, selectedCreatorIds, isAllCreatorsSelected]);
+
     const { dataSources, Part, setSelectedCategoryId } = useChartPart({
         viewType,
         seeDetails,
         focusType,
-        filtered,
+        filtered: filteredByCreator,
         dimension,
         displayCurrency: selectedFilterView?.displayCurrency,
     });
@@ -204,7 +218,7 @@ export default function Page() {
         useMemo(() => {
             const incomes: Bill[] = [];
             const expenses: Bill[] = [];
-            filtered.forEach((v) => {
+            filteredByCreator.forEach((v) => {
                 if (v.type === "expense") {
                     expenses.push(v);
                 } else {
@@ -215,7 +229,7 @@ export default function Page() {
                 incomes,
                 expenses,
             };
-        }, [filtered]);
+        }, [filteredByCreator]);
     const [analysis, setAnalysis] = useState<AnalysisResult>();
     const analysisUnit =
         viewType === "yearly"
@@ -312,9 +326,9 @@ export default function Page() {
         (type: FocusType) => {
             if (type === "expense") return filteredExpenseBills;
             if (type === "income") return filteredIncomeBills;
-            return filtered;
+            return filteredByCreator;
         },
-        [filtered, filteredExpenseBills, filteredIncomeBills],
+        [filteredByCreator, filteredExpenseBills, filteredIncomeBills],
     );
 
     const renderModule = useCallback(
@@ -399,7 +413,7 @@ export default function Page() {
                 return (
                     <CalendarModule
                         key={module}
-                        bills={filtered}
+                        bills={filteredByCreator}
                         range={realRange as [number, number]}
                     />
                 );
@@ -462,7 +476,7 @@ export default function Page() {
             analysisUnit,
             dataSources.highestExpenseBill,
             dataSources.highestIncomeBill,
-            filtered,
+            filteredByCreator,
             realRange,
             t,
             widgets,
@@ -561,6 +575,55 @@ export default function Page() {
                     }}
                     money={totalMoneys}
                 />
+                {creators.length > 1 && (
+                    <div className="w-full max-w-[600px] px-2 flex gap-1.5 flex-wrap items-center">
+                        <span className="text-xs text-muted-foreground mr-0.5">
+                            <i className="icon-[mdi--account-filter-outline] size-4 align-middle" />
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() => setSelectedCreatorIds(new Set())}
+                            className={cn(
+                                "text-xs px-2.5 py-1 rounded-full transition-colors border",
+                                isAllCreatorsSelected
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-muted text-muted-foreground border-transparent hover:bg-muted/80",
+                            )}
+                        >
+                            {t("all")}
+                        </button>
+                        {creators.map((c) => {
+                            const selected = selectedCreatorIds.has(
+                                String(c.id),
+                            );
+                            return (
+                                <button
+                                    key={c.id}
+                                    type="button"
+                                    onClick={() => {
+                                        setSelectedCreatorIds((prev) => {
+                                            const next = new Set(prev);
+                                            if (next.has(String(c.id))) {
+                                                next.delete(String(c.id));
+                                            } else {
+                                                next.add(String(c.id));
+                                            }
+                                            return next;
+                                        });
+                                    }}
+                                    className={cn(
+                                        "text-xs px-2.5 py-1 rounded-full transition-colors border",
+                                        selected
+                                            ? "bg-primary text-primary-foreground border-primary"
+                                            : "bg-muted text-muted-foreground border-transparent hover:bg-muted/80",
+                                    )}
+                                >
+                                    {c.name}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
                 <div className="w-full px-2 flex-1 flex justify-center overflow-y-auto">
                     <div className="w-full max-w-[600px] flex flex-col items-center gap-4 relative">
                         {effectiveModules.map((module) => renderModule(module))}

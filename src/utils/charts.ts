@@ -428,73 +428,63 @@ export const overallTrendOption = (
 ) =>
     merge(
         {
-            // 提示框，'axis' 表示鼠标悬浮在x轴上时触发
             tooltip: {
                 trigger: "axis",
+                backgroundColor: "rgba(255,255,255,0.95)",
+                borderColor: "#eee",
+                borderWidth: 1,
+                textStyle: { color: "#333", fontSize: 12 },
             },
-            // 图例，用于筛选系列
-            legend: {
-                // ECharts 会自动从 dataset.source 的第一行读取图例名称
-                // ['date', '收入', '支出', '结余'] -> '收入', '支出', '结余'
-            },
-            // ECharts 的数据核心
+            legend: {},
             dataset: dataset,
-            // x轴配置，type: 'category' 表示类目轴
-            // ECharts 会自动将 dataset 的第一列 ('date') 映射到 x 轴
+            grid: {
+                left: "3%",
+                right: "4%",
+                bottom: "3%",
+                top: 60,
+                containLabel: true,
+            },
             xAxis: {
                 type: "category",
-                boundaryGap: false, // 折线图建议设为 false，让线贴近y轴
-                axisLabel: {
-                    fontSize: 10, // 设置 y 轴刻度标签字体大小
-                },
-                axisLine: {
-                    show: true, // 确保 X 轴线显示
-                    lineStyle: {
-                        color: "#666", // 可以设置轴线颜色
-                        width: 1, // 可以设置轴线宽度
-                        // type: 'solid'  // 也可以设置线的类型，如实线 'solid'，虚线 'dashed'
-                    },
-                },
+                boundaryGap: false,
+                axisLabel: { fontSize: 10, color: "#999" },
+                axisLine: { show: false },
+                axisTick: { show: false },
             },
-            // y轴配置，type: 'value' 表示数值轴
             yAxis: {
                 type: "value",
                 splitLine: {
-                    // y轴网格线
-                    show: true, // 确保显示
-                    lineStyle: {
-                        type: "dashed", // 设置为虚线
-                        // color: '#ccc' // 可以设置颜色
-                    },
+                    show: true,
+                    lineStyle: { type: "dashed", color: "rgba(0,0,0,0.06)" },
                 },
-                axisLabel: {
-                    fontSize: 10, // 设置 y 轴刻度标签字体大小
-                },
-                axisLine: {
-                    show: true, // 确保 X 轴线显示
-                    lineStyle: {
-                        color: "#666", // 可以设置轴线颜色
-                        width: 1, // 可以设置轴线宽度
-                        // type: 'solid'  // 也可以设置线的类型，如实线 'solid'，虚线 'dashed'
-                    },
-                },
+                axisLabel: { fontSize: 10, color: "#999" },
+                axisLine: { show: false },
+                axisTick: { show: false },
             },
-            // 系列列表，定义了图表中的每一条线（或其他图形）
             series: [
-                // ECharts 会自动将 dataset 的第二列('收入')映射到第一个系列
                 {
                     type: "line",
-                    smooth: true,
+                    smooth: 0.4,
                     color: getCSSVariable("--color-income"),
+                    showSymbol: false,
+                    lineStyle: { width: 2.5 },
+                    areaStyle: { opacity: 0.08 },
                 },
-                // 第三列('支出')映射到第二个系列
                 {
                     type: "line",
-                    smooth: true,
+                    smooth: 0.4,
                     color: getCSSVariable("--color-expense"),
+                    showSymbol: false,
+                    lineStyle: { width: 2.5 },
+                    areaStyle: { opacity: 0.08 },
                 },
-                // 第四列('结余')映射到第三个系列
-                { type: "line", smooth: true, color: "black" },
+                {
+                    type: "line",
+                    smooth: 0.4,
+                    color: "#888",
+                    showSymbol: false,
+                    lineStyle: { width: 1.5, type: "dashed" },
+                },
             ],
         },
         options,
@@ -512,20 +502,50 @@ export const userTrendOption = (
     options?: ECOption,
 ): ECOption => {
     const seriesCount = dataset.source[0].length - 1;
-
     const baseOption: ECOption = {
-        tooltip: { trigger: "axis" },
+        tooltip: {
+            trigger: "axis",
+            backgroundColor: "rgba(255,255,255,0.95)",
+            borderColor: "#eee",
+            borderWidth: 1,
+            textStyle: { color: "#333", fontSize: 12 },
+        },
         legend: {},
         dataset: dataset,
-        xAxis: { type: "category", boundaryGap: false },
-        yAxis: { type: "value" },
+        grid: {
+            left: "3%",
+            right: "4%",
+            bottom: "3%",
+            top: 60,
+            containLabel: true,
+        },
+        xAxis: {
+            type: "category",
+            boundaryGap: false,
+            axisLabel: { fontSize: 10, color: "#999" },
+            axisLine: { show: false },
+            axisTick: { show: false },
+        },
+        yAxis: {
+            type: "value",
+            splitLine: {
+                show: true,
+                lineStyle: { type: "dashed", color: "rgba(0,0,0,0.06)" },
+            },
+            axisLabel: { fontSize: 10, color: "#999" },
+            axisLine: { show: false },
+            axisTick: { show: false },
+        },
         series: Array.from({ length: seriesCount }, (_, i) => ({
             type: "line",
-            smooth: true,
-            name: dataset.source[0][i + 1], // 系列名称，用于图例和 tooltip
+            smooth: 0.4,
+            showSymbol: false,
+            lineStyle: { width: 2.5 },
+            areaStyle: { opacity: 0.06 },
+            name: dataset.source[0][i + 1],
             encode: {
-                x: "date", // 映射到 dataset 中的 'date' 列
-                y: dataset.source[0][i + 1], // 映射到 dataset 中的 'glink25' 列
+                x: "date",
+                y: dataset.source[0][i + 1],
             },
             color: collaboratorColors(dataset.source[0][i + 1] as string),
         })),
@@ -543,45 +563,61 @@ export const structureOption = (dataset: any[], options?: ECOption) => {
             color: categoryColors(item.id),
         },
     }));
-
     return merge(
         {
             title: {
                 text: "支出结构",
                 left: "center",
+                textStyle: { fontSize: 16, fontWeight: 500 },
             },
             tooltip: {
                 trigger: "item",
                 formatter: "{b}: {c} ({d}%)",
+                backgroundColor: "rgba(255,255,255,0.95)",
+                borderColor: "#eee",
+                borderWidth: 1,
+                textStyle: { color: "#333", fontSize: 12 },
             },
             legend: {
                 orient: "vertical",
                 left: "left",
+                textStyle: { fontSize: 11, color: "#666" },
             },
             series: [
                 {
                     name: "支出类型",
                     type: "pie",
                     center: ["55%", "50%"],
-                    radius: "55%",
+                    radius: ["35%", "60%"],
+                    itemStyle: {
+                        borderRadius: 6,
+                        borderColor: "#fff",
+                        borderWidth: 2,
+                    },
+                    label: {
+                        fontSize: 11,
+                        color: "#666",
+                    },
                     labelLine: {
                         show: true,
-                        length: 10,
-                        length2: 10,
+                        length: 12,
+                        length2: 8,
                         lineStyle: {
                             width: 1,
-                            type: "solid",
-                            color: "#aaa",
+                            color: "#ccc",
                         },
-                        smooth: 0.2,
+                        smooth: 0.3,
                     },
-                    // 使用处理后的带颜色数据
                     data: coloredData,
                     emphasis: {
                         itemStyle: {
-                            shadowBlur: 10,
+                            shadowBlur: 12,
                             shadowOffsetX: 0,
-                            shadowColor: "rgba(0, 0, 0, 0.5)",
+                            shadowColor: "rgba(0, 0, 0, 0.15)",
+                        },
+                        label: {
+                            fontSize: 13,
+                            fontWeight: "bold",
                         },
                     },
                 },

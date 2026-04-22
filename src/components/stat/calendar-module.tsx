@@ -1,6 +1,5 @@
 import dayjs from "dayjs";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { useCreators } from "@/hooks/use-creator";
 import { amountToNumber } from "@/ledger/bill";
 import type { Bill } from "@/ledger/type";
 import { useIntl } from "@/locale";
@@ -10,7 +9,6 @@ import { Button } from "../ui/button";
 
 /**
  * 日历模块 — 在图表分析页面以月曆形式展示每日收支
- * 支持按记帐者（collaborator）筛选
  */
 export function CalendarModule({
     bills,
@@ -20,7 +18,6 @@ export function CalendarModule({
     range: [number, number];
 }) {
     const t = useIntl();
-    const creators = useCreators();
 
     // --- 月份导航 ---
     const initialMonth = useMemo(
@@ -29,38 +26,10 @@ export function CalendarModule({
     );
     const [currentMonth, setCurrentMonth] = useState(initialMonth);
 
-    // --- 记帐者筛选 ---
-    const [selectedCreatorIds, setSelectedCreatorIds] = useState<Set<string>>(
-        () => new Set(), // empty = all
-    );
-
-    const toggleCreator = (id: string) => {
-        setSelectedCreatorIds((prev) => {
-            const next = new Set(prev);
-            if (next.has(id)) {
-                next.delete(id);
-            } else {
-                next.add(id);
-            }
-            return next;
-        });
-    };
-
-    const selectAll = () => setSelectedCreatorIds(new Set());
-
-    const isAllSelected = selectedCreatorIds.size === 0;
-
     // --- 按日聚合 ---
     const dailyData = useMemo(() => {
         const map = new Map<string, { income: number; expense: number }>();
         for (const bill of bills) {
-            // 筛选记帐者
-            if (
-                !isAllSelected &&
-                !selectedCreatorIds.has(String(bill.creatorId))
-            ) {
-                continue;
-            }
             const dateKey = dayjs(bill.time).format("YYYY-MM-DD");
             const entry = map.get(dateKey) ?? { income: 0, expense: 0 };
             const amount = amountToNumber(bill.amount);
@@ -72,7 +41,7 @@ export function CalendarModule({
             map.set(dateKey, entry);
         }
         return map;
-    }, [bills, selectedCreatorIds, isAllSelected]);
+    }, [bills]);
 
     // --- 月份日曆格子 ---
     const calendarDays = useMemo(() => {
@@ -161,45 +130,6 @@ export function CalendarModule({
             <h2 className="font-medium text-lg text-center">
                 {t("calendar-view")}
             </h2>
-
-            {/* 记帐者筛选器 */}
-            {creators.length > 1 && (
-                <div className="flex gap-1.5 flex-wrap items-center">
-                    <span className="text-xs text-muted-foreground mr-1">
-                        {t("filter-by-user")}:
-                    </span>
-                    <button
-                        type="button"
-                        onClick={selectAll}
-                        className={cn(
-                            "text-xs px-2.5 py-1 rounded-full transition-colors border",
-                            isAllSelected
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-muted text-muted-foreground border-transparent hover:bg-muted/80",
-                        )}
-                    >
-                        {t("all")}
-                    </button>
-                    {creators.map((c) => {
-                        const selected = selectedCreatorIds.has(String(c.id));
-                        return (
-                            <button
-                                key={c.id}
-                                type="button"
-                                onClick={() => toggleCreator(String(c.id))}
-                                className={cn(
-                                    "text-xs px-2.5 py-1 rounded-full transition-colors border",
-                                    selected
-                                        ? "bg-primary text-primary-foreground border-primary"
-                                        : "bg-muted text-muted-foreground border-transparent hover:bg-muted/80",
-                                )}
-                            >
-                                {c.name}
-                            </button>
-                        );
-                    })}
-                </div>
-            )}
 
             {/* 月份导航 */}
             <div className="flex items-center justify-between relative">
