@@ -278,9 +278,9 @@ export default function EditorForm({
                 onBack={goBack}
                 title={
                     <div className="pl-[54px] w-full min-h-12 rounded-lg flex pt-2 pb-0 overflow-hidden scrollbar-hidden">
-                        <div className="text-white">
+                        <div className="text-stone-800 dark:text-white">
                             <Switch.Root
-                                className="w-24 h-12 relative bg-stone-900 rounded-lg p-1 flex justify-center items-center"
+                                className="w-24 h-12 relative bg-stone-200 dark:bg-stone-900 rounded-lg p-1 flex justify-center items-center"
                                 checked={billState.type === "income"}
                                 onCheckedChange={() => {
                                     setBillState((v) => ({
@@ -296,7 +296,11 @@ export default function EditorForm({
                                     }));
                                 }}
                             >
-                                <Switch.Thumb className="w-1/2 h-full flex justify-center items-center transition-all rounded-md bg-semantic-expense -translate-x-[22px] data-[state=checked]:bg-semantic-income data-[state=checked]:translate-x-[21px]">
+                                <div className="absolute inset-0 flex items-center justify-between px-3 pointer-events-none">
+                                    <span className="text-[8px] text-stone-500 dark:text-stone-400">{t("expense")}</span>
+                                    <span className="text-[8px] text-stone-500 dark:text-stone-400">{t("income")}</span>
+                                </div>
+                                <Switch.Thumb className="w-1/2 h-full flex justify-center items-center transition-all rounded-md bg-semantic-expense text-white -translate-x-[22px] data-[state=checked]:bg-semantic-income data-[state=checked]:translate-x-[21px]">
                                     <span className="text-[8px]">
                                         {billState.type === "expense"
                                             ? t("expense")
@@ -305,7 +309,7 @@ export default function EditorForm({
                                 </Switch.Thumb>
                             </Switch.Root>
                         </div>
-                        <div className="flex-1 flex bg-stone-400 focus:outline rounded-lg ml-2 px-2 relative">
+                        <div className="flex-1 flex bg-stone-200 dark:bg-stone-400 focus:outline rounded-lg ml-2 px-2 relative">
                             {quickCurrencies.length > 0 && (
                                 <Select
                                     value={targetCurrency?.id}
@@ -315,7 +319,7 @@ export default function EditorForm({
                                 >
                                     <div className="flex items-center">
                                         <SelectTrigger className="w-fit outline-none ring-none border-none shadow-none p-0 [&_svg]:hidden">
-                                            <div className="flex items-center font-semibold text-2xl text-white">
+                                            <div className="flex items-center font-semibold text-2xl text-stone-800 dark:text-white">
                                                 {targetCurrency?.symbol}
                                             </div>
                                         </SelectTrigger>
@@ -345,7 +349,7 @@ export default function EditorForm({
                                 className="flex-1 flex flex-col justify-center items-end overflow-x-scroll outline-none"
                             >
                                 {billState.currency && (
-                                    <div className="absolute text-white text-[8px] top-0">
+                                    <div className="absolute text-stone-500 dark:text-white text-[8px] top-0">
                                         ≈ {baseCurrency.symbol}{" "}
                                         {amountToNumber(billState.amount)}{" "}
                                         {baseCurrency.label}
@@ -353,7 +357,7 @@ export default function EditorForm({
                                 )}
                                 <Calculator.Value
                                     className={cn(
-                                        "text-white text-3xl font-semibold text-right bg-transparent after:inline-block after:content-['|'] after:opacity-0 after:font-thin after:translate-y-[-3px] ",
+                                        "text-stone-800 dark:text-white text-3xl font-semibold text-right bg-transparent after:inline-block after:content-['|'] after:opacity-0 after:font-thin after:translate-y-[-3px] ",
                                         monitorFocused &&
                                             "after:animate-caret-blink",
                                     )}
@@ -462,12 +466,11 @@ export default function EditorForm({
                         {t("edit-tags")}
                     </button>
                 </div>
-
-                {/* keyboard area */}
+                {/* keyboard area */}{" "}
                 <div
                     className={cn(
                         "h-[calc(480px+160px*(var(--bekh,0.5)-0.5))] sm:h-[calc(380px+160px*(var(--bekh,0.5)-0.5))] min-h-[264px] max-h-[calc(100%-124px)]",
-                        "keyboard-field relative flex gap-2 flex-col justify-start bg-stone-900 sm:rounded-b-md text-[white] p-2 pb-[max(env(safe-area-inset-bottom),8px)]",
+                        "keyboard-field relative flex gap-2 flex-col justify-start bg-gradient-to-b from-stone-100 to-stone-200 text-stone-800 dark:from-teal-900 dark:to-teal-950 dark:text-white sm:rounded-b-md p-2 pb-[max(env(safe-area-inset-bottom),8px)]",
                     )}
                 >
                     <ResizeHandle />
@@ -594,17 +597,16 @@ export default function EditorForm({
                                         }));
                                     }}
                                     type="text"
-                                    className="w-full bg-transparent text-white text-right placeholder-opacity-50 outline-none"
+                                    className="w-full bg-transparent text-stone-800 dark:text-white text-right placeholder-opacity-50 outline-none"
                                     placeholder={t("comment")}
                                     enterKeyHint="done"
                                 />
                             </div>
                         </RemarkHint>
-                    </div>
-
+                    </div>{" "}
                     <button
                         type="button"
-                        className="flex h-[80px] min-h-[48px] justify-center items-center bg-green-700 rounded-lg font-bold text-lg cursor-pointer"
+                        className="flex h-[80px] min-h-[48px] justify-center items-center bg-teal-600 hover:bg-teal-500 dark:bg-gradient-to-r dark:from-teal-700 dark:to-teal-600 rounded-xl font-bold text-lg text-white cursor-pointer shadow-md shadow-teal-700/20 active:scale-[0.98] transition-all"
                         onClick={toConfirm}
                     >
                         <i className="icon-[mdi--check] icon-md"></i>

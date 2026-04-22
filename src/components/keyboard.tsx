@@ -285,35 +285,62 @@ export const CalculatorKeyboard = ({
     const { handleButtonClick, Layout } = useContext(CalculatorContext)!;
     return (
         <div className={cn("grid grid-cols-8 gap-2", className)}>
-            {Layout.map((row) => (
-                <Button
-                    variant="ghost"
-                    key={row.label}
-                    data-label={row.label}
-                    onPointerDown={() => {
-                        handleButtonClick(row.label);
-                        onKey?.(row.label);
-                    }}
-                    className={cn(
-                        (row.cols ?? 1) > 1 && "col-span-2",
-                        "h-full text-lg font-semibold bg-background/10 active:bg-background/50 transition-all py-1",
-                        row.label === "c" && "bg-destructive/60",
-                    )}
-                >
-                    {row.label === "c" ? (
-                        <i className="icon-[mdi--clear-outline]"></i>
-                    ) : row.label === "r" ? (
-                        <div className="flex flex-col gap-1 items-center">
-                            <i className="icon-[mdi--reload]"></i>
-                            <div className="text-xs">{t("add-again")}</div>
-                        </div>
-                    ) : row.label === "x" ? (
-                        <span data-label>×</span>
-                    ) : (
-                        <span data-label>{row.label}</span>
-                    )}
-                </Button>
-            ))}
+            {Layout.map((row) => {
+                const isOp =
+                    row.label === "+" ||
+                    row.label === "-" ||
+                    row.label === "x" ||
+                    row.label === "÷";
+                const isClear = row.label === "c";
+                const isEqual = row.label === "=";
+                const isReload = row.label === "r";
+                return (
+                    <Button
+                        variant="ghost"
+                        key={row.label}
+                        data-label={row.label}
+                        onPointerDown={() => {
+                            handleButtonClick(row.label);
+                            onKey?.(row.label);
+                        }}
+                        className={cn(
+                            (row.cols ?? 1) > 1 && "col-span-2",
+                            "h-full text-[17px] font-normal rounded-xl transition-all duration-100 py-2 active:scale-[0.97] select-none",
+                            // number keys
+                            !isOp &&
+                                !isClear &&
+                                !isEqual &&
+                                !isReload &&
+                                "bg-black/[0.04] hover:bg-black/[0.08] active:bg-black/[0.12] text-stone-800 dark:bg-white/[0.08] dark:hover:bg-white/[0.13] dark:active:bg-white/[0.20] dark:text-white",
+                            // operator keys
+                            isOp &&
+                                "bg-black/[0.06] hover:bg-black/[0.10] active:bg-black/[0.15] text-teal-700 font-medium dark:bg-white/[0.12] dark:hover:bg-white/[0.18] dark:active:bg-white/[0.25] dark:text-emerald-300",
+                            // clear key
+                            isClear &&
+                                "bg-black/[0.04] hover:bg-black/[0.08] active:bg-black/[0.12] text-red-500 font-medium dark:bg-white/[0.08] dark:hover:bg-white/[0.13] dark:active:bg-white/[0.20] dark:text-red-300",
+                            // equal key
+                            isEqual &&
+                                "bg-teal-600 hover:bg-teal-500 active:bg-teal-400 text-white font-semibold dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:active:bg-emerald-300 dark:text-emerald-950",
+                            // reload key
+                            isReload &&
+                                "bg-black/[0.04] hover:bg-black/[0.08] active:bg-black/[0.12] text-stone-400 dark:bg-white/[0.08] dark:hover:bg-white/[0.13] dark:active:bg-white/[0.20] dark:text-white/60",
+                        )}
+                    >
+                        {row.label === "c" ? (
+                            <i className="icon-[mdi--clear-outline]"></i>
+                        ) : row.label === "r" ? (
+                            <div className="flex flex-col gap-1 items-center">
+                                <i className="icon-[mdi--reload]"></i>
+                                <div className="text-xs">{t("add-again")}</div>
+                            </div>
+                        ) : row.label === "x" ? (
+                            <span data-label>×</span>
+                        ) : (
+                            <span data-label>{row.label}</span>
+                        )}
+                    </Button>
+                );
+            })}
         </div>
     );
 };
