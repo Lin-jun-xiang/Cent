@@ -71,6 +71,7 @@ export default defineConfig(({ mode }) => {
         plugins.push(analyzer());
     }
     return {
+        base: '/Cent/',
         plugins,
         build: {
             rollupOptions: {
