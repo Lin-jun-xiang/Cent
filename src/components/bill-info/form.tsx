@@ -193,7 +193,7 @@ export default function BillInfo({
                                 <div>{t("currency")}:</div>
                                 <div>
                                     {currency.symbol}
-                                    {amountToNumber(edit.currency?.amount)}{" "}
+                                    {amountToNumber(edit.currency?.amount ?? 0)}{" "}
                                     {currency.label}
                                 </div>
                             </div>

@@ -136,7 +136,9 @@ export default function BillItem({
                         <div className="text-xs">
                             {currency.symbol}
                             <Money
-                                value={amountToNumber(bill.currency?.amount)}
+                                value={amountToNumber(
+                                    bill.currency?.amount ?? 0,
+                                )}
                                 accurate
                             />
                         </div>

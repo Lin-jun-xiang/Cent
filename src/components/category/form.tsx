@@ -65,7 +65,7 @@ export default function CategoryEditForm({
             return {
                 name: "",
                 type: edit?.type ?? "expense",
-                color: "#fff",
+                color: "#5470c6",
                 icon: ICONS[0].icons[0].className,
                 ...edit,
             };
@@ -115,16 +115,19 @@ export default function CategoryEditForm({
             name: edit.name,
             parent: edit.parent,
             defaultSelect: edit.defaultSelect,
+            color: edit.color,
         };
         const formattedData = {
             ...data,
             icon: category?.icon,
+            color: category?.color,
         };
         if (
             originCate.icon === formattedData.icon &&
             originCate.name === formattedData.name &&
             originCate.parent === formattedData.parent &&
-            originCate.defaultSelect === formattedData.defaultSelect
+            originCate.defaultSelect === formattedData.defaultSelect &&
+            originCate.color === formattedData.color
         ) {
             console.log("nothing changed");
             return;
@@ -330,6 +333,43 @@ export default function CategoryEditForm({
                                 }}
                             ></FormField>
                         }
+                        <div className="flex justify-between items-center h-9">
+                            <span className="text-sm font-medium">
+                                {t("color") ?? "顏色"}:
+                            </span>
+                            <div className="flex gap-1.5 flex-wrap">
+                                {[
+                                    "#5470c6",
+                                    "#91cc75",
+                                    "#fac858",
+                                    "#ee6666",
+                                    "#73c0de",
+                                    "#3ba272",
+                                    "#9a60b4",
+                                    "#ea7ccc",
+                                    "#fc8452",
+                                    "#4d3c77",
+                                ].map((c) => (
+                                    <button
+                                        key={c}
+                                        type="button"
+                                        className={cn(
+                                            "size-6 rounded-full border-2 cursor-pointer transition-transform hover:scale-110",
+                                            category.color === c
+                                                ? "border-foreground scale-110"
+                                                : "border-transparent",
+                                        )}
+                                        style={{ backgroundColor: c }}
+                                        onClick={() =>
+                                            setCategory((v) => ({
+                                                ...v,
+                                                color: c,
+                                            }))
+                                        }
+                                    />
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
 

@@ -422,7 +422,7 @@ export default function Page() {
                             )}
                         </div>
                     ) : currentDateBills.length > 0 ? (
-                        <div className="flex flex-col divide-y">
+                        <div className="flex flex-col divide-y pb-24">
                             {currentDateBills.map((bill) => (
                                 <BillItem
                                     key={bill.id}
