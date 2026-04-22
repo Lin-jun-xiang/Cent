@@ -4,7 +4,10 @@ export const locales = [
     {
         name: "zh-TW",
         fetcher: () => import("./lang/zh-TW.json"),
-        matcher: (_l: string) => _l.includes("zh-TW") || _l.includes("zh-HK") || _l.includes("zh-Hant"),
+        matcher: (_l: string) =>
+            _l.includes("zh-TW") ||
+            _l.includes("zh-HK") ||
+            _l.includes("zh-Hant"),
         label: "中文-繁體",
     },
     {
