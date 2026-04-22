@@ -42,9 +42,9 @@ export default defineConfig(({ mode }) => {
             injectRegister: "auto",
             includeAssets: ["favicon.ico", "apple-touch-icon.png"],
             manifest: {
-                name: "Cent - 日计",
+                name: "Cent - 日計",
                 short_name: "Cent",
-                description: "Accounting your life - 记录每一天",
+                description: "Accounting your life - 記錄每一天",
                 theme_color: "#ffffff",
                 icons: [
                     { src: "icon.png", sizes: "192x192", type: "image/png" },

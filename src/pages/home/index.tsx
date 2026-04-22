@@ -138,19 +138,20 @@ export default function Page() {
             <div className="flex flex-wrap flex-col w-full gap-2">
                 <div
                     data-today-overview
-                    className="bg-stone-800 text-background dark:bg-foreground/20 dark:text-foreground relative h-20 w-full flex justify-end rounded-lg sm:flex-1 p-4"
+                    className="bg-gradient-to-br from-stone-800 via-stone-900 to-stone-950 text-background dark:from-white/12 dark:via-white/8 dark:to-white/4 dark:text-foreground relative h-22 w-full flex justify-end rounded-2xl sm:flex-1 p-4 shadow-lg shadow-stone-800/20 dark:shadow-black/30 overflow-hidden"
                 >
-                    <span className="absolute top-2 left-4">
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent pointer-events-none" />
+                    <span className="absolute top-3 left-4 text-sm font-medium tracking-wide opacity-80">
                         {denseDate(currentDate)}
                     </span>
                     <AnimatedNumber
                         value={currentDateAmount}
-                        className="font-bold text-4xl "
-                    />
+                        className="font-bold text-4xl tracking-tight"
+                    />{" "}
                     {currentBook && (
                         <button
                             type="button"
-                            className="absolute bottom-2 left-4 text-xs opacity-60 flex items-center gap-1 cursor-pointer"
+                            className="absolute bottom-3 left-4 text-xs opacity-50 flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity"
                             onClick={() => {
                                 showBookGuide();
                             }}
@@ -170,7 +171,7 @@ export default function Page() {
                             {homeWidgets.map((widget) => (
                                 <div
                                     key={widget.id}
-                                    className="flex-shrink-0 snap-start w-full min-h-[100px] border rounded-lg overflow-hidden"
+                                    className="flex-shrink-0 snap-start w-full min-h-[100px] border border-border/60 rounded-xl overflow-hidden shadow-sm"
                                 >
                                     <WidgetPreview widget={widget} />
                                 </div>
@@ -255,7 +256,7 @@ export default function Page() {
                             showAssets={showAssets}
                         />
                     ) : (
-                        <div className="text-xs p-4 text-center">
+                        <div className="text-sm p-8 text-center text-muted-foreground/60">
                             {t("nothing-here-add-one-bill")}
                         </div>
                     )}
