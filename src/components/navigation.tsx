@@ -27,10 +27,10 @@ export default function Navigation() {
             {/* search */}
             <button
                 type="button"
-                className={`w-14 h-14 sm:w-10 sm:h-10 cursor-pointer flex items-center justify-center rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/20 m-2 transition-all duration-200 backdrop-blur-xl hover:scale-105 active:scale-95 ${
+                className={`w-14 h-14 sm:w-10 sm:h-10 cursor-pointer flex items-center justify-center rounded-2xl shadow-lg shadow-teal-900/8 dark:shadow-black/25 m-2 transition-all duration-200 backdrop-blur-xl hover:scale-105 active:scale-95 ${
                     currentTab === "/search"
-                        ? "bg-foreground/15 dark:bg-white/20"
-                        : "bg-background/80 dark:bg-white/10"
+                        ? "bg-teal-100/80 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300"
+                        : "bg-white/70 dark:bg-white/8"
                 }`}
                 onClick={() => switchTab("/search")}
             >
@@ -38,12 +38,12 @@ export default function Navigation() {
             </button>
 
             {/* middle group */}
-            <div className="flex items-center rounded-2xl p-1.5 bg-background/80 dark:bg-white/10 backdrop-blur-xl w-56 h-14 m-2 shadow-lg shadow-black/5 dark:shadow-black/20 sm:flex-col sm:w-10 sm:h-50 sm:-order-1">
+            <div className="flex items-center rounded-2xl p-1.5 bg-white/70 dark:bg-white/8 backdrop-blur-xl w-56 h-14 m-2 shadow-lg shadow-teal-900/8 dark:shadow-black/25 sm:flex-col sm:w-10 sm:h-50 sm:-order-1">
                 <button
                     type="button"
-                    className={`flex-1 h-full w-full transition-all duration-200 rounded-xl flex items-center justify-center cursor-pointer hover:bg-foreground/8 active:scale-95 ${
+                    className={`flex-1 h-full w-full transition-all duration-200 rounded-xl flex items-center justify-center cursor-pointer hover:bg-teal-50/60 dark:hover:bg-teal-900/20 active:scale-95 ${
                         currentTab === "/"
-                            ? "bg-foreground/12 dark:bg-white/15 shadow-sm"
+                            ? "bg-teal-100/70 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 shadow-sm"
                             : ""
                     }`}
                     onClick={() => switchTab("/")}
@@ -60,9 +60,9 @@ export default function Navigation() {
 
                 <button
                     type="button"
-                    className={`flex-1 h-full w-full transition-all duration-200 rounded-xl flex items-center justify-center cursor-pointer hover:bg-foreground/8 active:scale-95 ${
+                    className={`flex-1 h-full w-full transition-all duration-200 rounded-xl flex items-center justify-center cursor-pointer hover:bg-teal-50/60 dark:hover:bg-teal-900/20 active:scale-95 ${
                         currentTab === "/stat"
-                            ? "bg-foreground/12 dark:bg-white/15 shadow-sm"
+                            ? "bg-teal-100/70 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 shadow-sm"
                             : ""
                     }`}
                     onClick={() => switchTab("/stat")}
@@ -76,7 +76,7 @@ export default function Navigation() {
             {/* settings */}
             <button
                 type="button"
-                className="w-14 h-14 sm:w-10 sm:h-10 cursor-pointer flex items-center justify-center rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/20 m-2 transition-all duration-200 bg-background/80 dark:bg-white/10 backdrop-blur-xl hover:scale-105 active:scale-95"
+                className="w-14 h-14 sm:w-10 sm:h-10 cursor-pointer flex items-center justify-center rounded-2xl shadow-lg shadow-teal-900/8 dark:shadow-black/25 m-2 transition-all duration-200 bg-white/70 dark:bg-white/8 backdrop-blur-xl hover:scale-105 active:scale-95"
                 onClick={() => {
                     showSettings();
                 }}

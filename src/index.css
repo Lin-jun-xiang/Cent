@@ -20,7 +20,8 @@ body {
 	min-width: 200px;
 	min-height: 200px;
 	touch-action: none;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC",
+	font-family:
+		-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC",
 		"Microsoft JhengHei", "Noto Sans TC", sans-serif;
 }
 
@@ -113,72 +114,72 @@ button {
 
 :root {
 	--radius: 0.75rem;
-	--background: oklch(1 0 0);
-	--foreground: oklch(0.129 0.042 264.695);
-	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.129 0.042 264.695);
-	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.129 0.042 264.695);
-	--primary: oklch(0.208 0.042 265.755);
-	--primary-foreground: oklch(0.984 0.003 247.858);
-	--secondary: oklch(0.968 0.007 247.896);
-	--secondary-foreground: oklch(0.208 0.042 265.755);
-	--muted: oklch(0.968 0.007 247.896);
-	--muted-foreground: oklch(0.554 0.046 257.417);
-	--accent: oklch(0.968 0.007 247.896);
-	--accent-foreground: oklch(0.208 0.042 265.755);
-	--destructive: oklch(0.577 0.245 27.325);
-	--destructive-foreground: oklch(0.984 0.003 247.858);
-	--border: oklch(0.929 0.013 255.508);
-	--input: oklch(0.929 0.013 255.508);
-	--ring: oklch(0.704 0.04 256.788);
-	--chart-1: oklch(0.646 0.222 41.116);
-	--chart-2: oklch(0.6 0.118 184.704);
-	--chart-3: oklch(0.398 0.07 227.392);
-	--chart-4: oklch(0.828 0.189 84.429);
-	--chart-5: oklch(0.769 0.188 70.08);
-	--sidebar: oklch(0.984 0.003 247.858);
-	--sidebar-foreground: oklch(0.129 0.042 264.695);
-	--sidebar-primary: oklch(0.208 0.042 265.755);
-	--sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-	--sidebar-accent: oklch(0.968 0.007 247.896);
-	--sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-	--sidebar-border: oklch(0.929 0.013 255.508);
-	--sidebar-ring: oklch(0.704 0.04 256.788);
+	--background: oklch(0.98 0.005 180);
+	--foreground: oklch(0.18 0.03 230);
+	--card: oklch(0.995 0.003 180);
+	--card-foreground: oklch(0.18 0.03 230);
+	--popover: oklch(0.995 0.003 180);
+	--popover-foreground: oklch(0.18 0.03 230);
+	--primary: oklch(0.65 0.14 175);
+	--primary-foreground: oklch(0.99 0.005 180);
+	--secondary: oklch(0.95 0.015 175);
+	--secondary-foreground: oklch(0.25 0.04 200);
+	--muted: oklch(0.94 0.012 180);
+	--muted-foreground: oklch(0.5 0.035 220);
+	--accent: oklch(0.93 0.02 175);
+	--accent-foreground: oklch(0.25 0.04 200);
+	--destructive: oklch(0.62 0.22 25);
+	--destructive-foreground: oklch(0.99 0.005 180);
+	--border: oklch(0.91 0.015 180);
+	--input: oklch(0.91 0.015 180);
+	--ring: oklch(0.65 0.14 175);
+	--chart-1: oklch(0.7 0.14 175);
+	--chart-2: oklch(0.65 0.2 25);
+	--chart-3: oklch(0.8 0.15 85);
+	--chart-4: oklch(0.6 0.18 280);
+	--chart-5: oklch(0.72 0.16 50);
+	--sidebar: oklch(0.97 0.008 180);
+	--sidebar-foreground: oklch(0.18 0.03 230);
+	--sidebar-primary: oklch(0.65 0.14 175);
+	--sidebar-primary-foreground: oklch(0.99 0.005 180);
+	--sidebar-accent: oklch(0.93 0.02 175);
+	--sidebar-accent-foreground: oklch(0.25 0.04 200);
+	--sidebar-border: oklch(0.91 0.015 180);
+	--sidebar-ring: oklch(0.65 0.14 175);
 }
 
 .dark {
-	--background: oklch(30.495% 0.00388 264.575);
-	--foreground: oklch(0.984 0.003 247.858);
-	--card: oklch(0.208 0.042 265.755);
-	--card-foreground: oklch(0.984 0.003 247.858);
-	--popover: oklch(0.208 0.042 265.755);
-	--popover-foreground: oklch(0.984 0.003 247.858);
-	--primary: oklch(0.929 0.013 255.508);
-	--primary-foreground: oklch(0.208 0.042 265.755);
-	--secondary: oklch(0.279 0.041 260.031);
-	--secondary-foreground: oklch(0.984 0.003 247.858);
-	--muted: oklch(0.279 0.041 260.031);
-	--muted-foreground: oklch(0.704 0.04 256.788);
-	--accent: oklch(0.279 0.041 260.031);
-	--accent-foreground: oklch(0.984 0.003 247.858);
-	--destructive: oklch(0.704 0.191 22.216);
+	--background: oklch(0.15 0.015 200);
+	--foreground: oklch(0.94 0.008 180);
+	--card: oklch(0.19 0.02 200);
+	--card-foreground: oklch(0.94 0.008 180);
+	--popover: oklch(0.19 0.02 200);
+	--popover-foreground: oklch(0.94 0.008 180);
+	--primary: oklch(0.72 0.13 175);
+	--primary-foreground: oklch(0.15 0.015 200);
+	--secondary: oklch(0.24 0.025 200);
+	--secondary-foreground: oklch(0.94 0.008 180);
+	--muted: oklch(0.24 0.025 200);
+	--muted-foreground: oklch(0.62 0.03 200);
+	--accent: oklch(0.24 0.03 195);
+	--accent-foreground: oklch(0.94 0.008 180);
+	--destructive: oklch(0.68 0.2 22);
 	--border: oklch(1 0 0 / 10%);
-	--input: oklch(1 0 0 / 15%);
-	--ring: oklch(0.551 0.027 264.364);
-	--chart-1: oklch(0.488 0.243 264.376);
-	--chart-2: oklch(0.696 0.17 162.48);
-	--chart-3: oklch(0.769 0.188 70.08);
-	--chart-4: oklch(0.627 0.265 303.9);
-	--chart-5: oklch(0.645 0.246 16.439);
-	--sidebar: oklch(0.208 0.042 265.755);
-	--sidebar-foreground: oklch(0.984 0.003 247.858);
-	--sidebar-primary: oklch(0.488 0.243 264.376);
-	--sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-	--sidebar-accent: oklch(0.279 0.041 260.031);
-	--sidebar-accent-foreground: oklch(0.984 0.003 247.858);
+	--input: oklch(1 0 0 / 12%);
+	--ring: oklch(0.72 0.13 175);
+	--chart-1: oklch(0.72 0.13 175);
+	--chart-2: oklch(0.7 0.2 25);
+	--chart-3: oklch(0.8 0.16 85);
+	--chart-4: oklch(0.65 0.2 280);
+	--chart-5: oklch(0.75 0.18 50);
+	--sidebar: oklch(0.17 0.018 200);
+	--sidebar-foreground: oklch(0.94 0.008 180);
+	--sidebar-primary: oklch(0.72 0.13 175);
+	--sidebar-primary-foreground: oklch(0.94 0.008 180);
+	--sidebar-accent: oklch(0.24 0.03 195);
+	--sidebar-accent-foreground: oklch(0.94 0.008 180);
 	--sidebar-border: oklch(1 0 0 / 10%);
-	--sidebar-ring: oklch(0.551 0.027 264.364);
+	--sidebar-ring: oklch(0.72 0.13 175);
 }
 
 /* Semantic expense/income color variables (defaults match Tailwind's default palette)
@@ -189,20 +190,20 @@ button {
 	/* Semantic expense/income colors: keep minimal set
 	   - Primary semantic color
 	   - Legacy '-medium' alias kept for compatibility */
-	--color-expense: #b91c1c; /* primary expense color */
-	--color-expense-medium-legacy: #f87171; /* medium (legacy) */
+	--color-expense: #f56c6c; /* coral red - primary expense color */
+	--color-expense-medium-legacy: #f89898; /* medium (legacy) */
 
-	--color-income: #15803d; /* primary income color */
-	--color-income-medium-legacy: #34d399; /* medium (legacy) */
+	--color-income: #4db6ac; /* teal green - primary income color */
+	--color-income-medium-legacy: #80cbc4; /* medium (legacy) */
 }
 
 /* Dark mode overrides for semantic colors (optional) */
 .dark {
-	--color-expense: #991b1b;
-	--color-expense-medium-legacy: #fb7185;
+	--color-expense: #f56c6c;
+	--color-expense-medium-legacy: #f89898;
 
-	--color-income: #166534;
-	--color-income-medium-legacy: #34d399;
+	--color-income: #4db6ac;
+	--color-income-medium-legacy: #80cbc4;
 }
 
 @layer base {
@@ -232,25 +233,25 @@ button {
 
 /* Tag基础变量定义 (Light Mode) */
 :root {
-	--tag-red: #ff5f57;
-	--tag-orange: #ffbd2e;
-	--tag-yellow: #b28200;
-	--tag-green: #28c941;
-	--tag-blue: #007aff;
-	--tag-purple: #a550a7;
-	--tag-gray: #8e8e93;
+	--tag-red: #f56c6c;
+	--tag-orange: #ffb74d;
+	--tag-yellow: #ffd54f;
+	--tag-green: #4db6ac;
+	--tag-blue: #64b5f6;
+	--tag-purple: #ba68c8;
+	--tag-gray: #90a4ae;
 }
 
 /* Tag深色模式变量覆盖 (Dark Mode) */
 @media (prefers-color-scheme: dark) {
 	:root {
-		--tag-red: #ff6961;
-		--tag-orange: #ffb340;
-		--tag-yellow: #ffd426;
-		--tag-green: #32d74b;
-		--tag-blue: #0a84ff;
-		--tag-purple: #bf5af2;
-		--tag-gray: #98989d;
+		--tag-red: #ef5350;
+		--tag-orange: #ffa726;
+		--tag-yellow: #ffee58;
+		--tag-green: #4db6ac;
+		--tag-blue: #42a5f5;
+		--tag-purple: #ab47bc;
+		--tag-gray: #78909c;
 	}
 }
 
@@ -279,15 +280,15 @@ button {
 
 /* 图表分类 / 协作者系列色（ECharts 风格调色板，供 `src/utils/color.ts` 读取） */
 :root {
-	--category-color-1: #5470c6;
-	--category-color-2: #91cc75;
-	--category-color-3: #fac858;
-	--category-color-4: #ee6666;
-	--category-color-5: #73c0de;
-	--category-color-6: #3ba272;
-	--category-color-7: #fc8452;
-	--category-color-8: #9a60b4;
-	--category-color-9: #ea7ccc;
+	--category-color-1: #4db6ac;
+	--category-color-2: #f56c6c;
+	--category-color-3: #ffb74d;
+	--category-color-4: #64b5f6;
+	--category-color-5: #ba68c8;
+	--category-color-6: #81c784;
+	--category-color-7: #ff8a65;
+	--category-color-8: #4fc3f7;
+	--category-color-9: #f06292;
 	--collaborator-color-1: var(--category-color-1);
 	--collaborator-color-2: var(--category-color-2);
 	--collaborator-color-3: var(--category-color-3);

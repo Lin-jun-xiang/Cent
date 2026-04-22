@@ -37,15 +37,15 @@ export const createColorSet = (preset: string[]) => {
 
 /** 与 `src/index.css` 中系列色一致，仅在无 DOM（如测试）时作回退 */
 const CHART_SERIES_FALLBACK = [
-    "#5470c6",
-    "#91cc75",
-    "#fac858",
-    "#ee6666",
-    "#73c0de",
-    "#3ba272",
-    "#fc8452",
-    "#9a60b4",
-    "#ea7ccc",
+    "#4db6ac",
+    "#f56c6c",
+    "#ffb74d",
+    "#64b5f6",
+    "#ba68c8",
+    "#81c784",
+    "#ff8a65",
+    "#4fc3f7",
+    "#f06292",
 ] as const;
 
 const CATEGORY_COLOR_VARS = [

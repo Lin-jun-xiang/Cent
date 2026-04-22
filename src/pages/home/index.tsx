@@ -138,9 +138,10 @@ export default function Page() {
             <div className="flex flex-wrap flex-col w-full gap-2">
                 <div
                     data-today-overview
-                    className="bg-gradient-to-br from-stone-800 via-stone-900 to-stone-950 text-background dark:from-white/12 dark:via-white/8 dark:to-white/4 dark:text-foreground relative h-22 w-full flex justify-end rounded-2xl sm:flex-1 p-4 shadow-lg shadow-stone-800/20 dark:shadow-black/30 overflow-hidden"
+                    className="bg-gradient-to-br from-teal-600 via-teal-700 to-teal-900 text-white dark:from-teal-900/80 dark:via-teal-800/60 dark:to-teal-950/40 dark:text-foreground relative h-24 w-full flex justify-end rounded-2xl sm:flex-1 p-4 shadow-lg shadow-teal-800/25 dark:shadow-black/40 overflow-hidden backdrop-blur-sm"
                 >
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-transparent to-white/5 pointer-events-none" />
+                    <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/8 blur-2xl pointer-events-none" />
                     <span className="absolute top-3 left-4 text-sm font-medium tracking-wide opacity-80">
                         {denseDate(currentDate)}
                     </span>
