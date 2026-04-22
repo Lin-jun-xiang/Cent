@@ -20,7 +20,7 @@ import Ledger from "@/components/ledger";
 import BillItem from "@/components/ledger/item";
 import Loading from "@/components/loading";
 import Money from "@/components/money";
-import { Calendar } from "@/components/ui/calendar";
+import { CalendarModule } from "@/components/stat/calendar-module";
 import {
     Popover,
     PopoverContent,
@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/popover";
 import WidgetPreview from "@/components/widget/preview";
 import { useBudget } from "@/hooks/use-budget";
+import { useCreators } from "@/hooks/use-creator";
 import { useSnap } from "@/hooks/use-snap";
 import { useWidget } from "@/hooks/use-widget";
 import { amountToNumber } from "@/ledger/bill";
@@ -54,6 +55,14 @@ export default function Page() {
         useShallow((state) => state.showAssetsInLedger),
     );
     const { id: userId } = useUserStore();
+
+    // --- Creator filter ---
+    const creators = useCreators();
+    const [selectedCreatorIds, setSelectedCreatorIds] = useState<Set<string>>(
+        () => new Set(),
+    );
+    const isAllCreatorsSelected = selectedCreatorIds.size === 0;
+
     const syncIconClassName =
         sync === "wait"
             ? "icon-[mdi--cloud-minus-outline]"
@@ -107,11 +116,15 @@ export default function Page() {
     );
 
     const currentDateBills = useMemo(() => {
-        return filterOrderedBillListByTimeRange(bills, [
+        const timeBills = filterOrderedBillListByTimeRange(bills, [
             currentDate.startOf("day"),
             currentDate.endOf("day"),
         ]);
-    }, [bills, currentDate]);
+        if (isAllCreatorsSelected) return timeBills;
+        return timeBills.filter((b) =>
+            selectedCreatorIds.has(String(b.creatorId)),
+        );
+    }, [bills, currentDate, selectedCreatorIds, isAllCreatorsSelected]);
 
     const { todayExpense, todayIncome } = useMemo(() => {
         let expense = 0;
@@ -182,6 +195,18 @@ export default function Page() {
     }, []);
 
     const isToday = currentDate.isSame(dayjs(), "day");
+
+    // --- Creator-filtered bills + range for CalendarModule ---
+    const creatorFilteredBills = useMemo(() => {
+        if (isAllCreatorsSelected) return bills;
+        return bills.filter((b) => selectedCreatorIds.has(String(b.creatorId)));
+    }, [bills, selectedCreatorIds, isAllCreatorsSelected]);
+
+    const calendarRange = useMemo<[number, number]>(() => {
+        const start = bills[bills.length - 1]?.time ?? Date.now();
+        const end = bills[0]?.time ?? Date.now();
+        return [start, end];
+    }, [bills]);
 
     return (
         <div className="w-full h-full p-2 flex flex-col overflow-hidden page-show">
@@ -280,19 +305,17 @@ export default function Page() {
                                 <i className="icon-[mdi--calendar-month-outline] size-5"></i>
                             </button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="center">
-                            <Calendar
-                                mode="single"
-                                selected={currentDate.toDate()}
-                                onSelect={(date) => {
-                                    if (date) {
-                                        setCurrentDate(dayjs(date));
-                                        setCalendarOpen(false);
-                                    }
+                        <PopoverContent
+                            className="w-[min(95vw,400px)] p-0"
+                            align="center"
+                        >
+                            <CalendarModule
+                                bills={creatorFilteredBills}
+                                range={calendarRange}
+                                onDateClick={(date) => {
+                                    setCurrentDate(date);
+                                    setCalendarOpen(false);
                                 }}
-                                disabled={(date) =>
-                                    dayjs(date).isAfter(dayjs(), "day")
-                                }
                             />
                         </PopoverContent>
                     </Popover>
@@ -342,6 +365,56 @@ export default function Page() {
                         className="font-semibold inline-flex"
                     />
                 </div>{" "}
+                {/* ── Creator filter ── */}
+                {creators.length > 1 && (
+                    <div className="w-full px-2 flex gap-1.5 flex-wrap items-center">
+                        <span className="text-xs text-muted-foreground mr-0.5">
+                            <i className="icon-[mdi--account-filter-outline] size-4 align-middle" />
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() => setSelectedCreatorIds(new Set())}
+                            className={cn(
+                                "text-xs px-2.5 py-1 rounded-full transition-colors border",
+                                isAllCreatorsSelected
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-muted text-muted-foreground border-transparent hover:bg-muted/80",
+                            )}
+                        >
+                            {t("all")}
+                        </button>
+                        {creators.map((c) => {
+                            const selected = selectedCreatorIds.has(
+                                String(c.id),
+                            );
+                            return (
+                                <button
+                                    key={c.id}
+                                    type="button"
+                                    onClick={() => {
+                                        setSelectedCreatorIds((prev) => {
+                                            const next = new Set(prev);
+                                            if (next.has(String(c.id))) {
+                                                next.delete(String(c.id));
+                                            } else {
+                                                next.add(String(c.id));
+                                            }
+                                            return next;
+                                        });
+                                    }}
+                                    className={cn(
+                                        "text-xs px-2.5 py-1 rounded-full transition-colors border",
+                                        selected
+                                            ? "bg-primary text-primary-foreground border-primary"
+                                            : "bg-muted text-muted-foreground border-transparent hover:bg-muted/80",
+                                    )}
+                                >
+                                    {c.name}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
                 {homeWidgets.length > 0 && (
                     <div className="w-full flex flex-col gap-1">
                         <div

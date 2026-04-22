@@ -13,9 +13,11 @@ import { Button } from "../ui/button";
 export function CalendarModule({
     bills,
     range,
+    onDateClick,
 }: {
     bills: Bill[];
     range: [number, number];
+    onDateClick?: (date: dayjs.Dayjs) => void;
 }) {
     const t = useIntl();
 
@@ -299,13 +301,21 @@ export function CalendarModule({
                                 : undefined;
 
                             return (
+                                // biome-ignore lint/a11y/noStaticElementInteractions: calendar day cell
+                                // biome-ignore lint/a11y/useKeyWithClickEvents: calendar day cell
                                 <div
                                     key={dateKey}
+                                    onClick={() =>
+                                        isCurrentMonth && onDateClick?.(day)
+                                    }
                                     className={cn(
                                         "flex flex-col items-center py-1 min-h-[52px] rounded-md text-center transition-colors",
                                         !isCurrentMonth && "opacity-30",
                                         isToday &&
                                             "bg-accent ring-1 ring-accent-foreground/20",
+                                        isCurrentMonth &&
+                                            onDateClick &&
+                                            "cursor-pointer hover:bg-muted",
                                     )}
                                 >
                                     <span
@@ -329,21 +339,6 @@ export function CalendarModule({
                                                     +{fmt(data.income)}
                                                 </span>
                                             )}
-                                            {data.income > 0 &&
-                                                data.expense > 0 &&
-                                                net !== undefined && (
-                                                    <span
-                                                        className={cn(
-                                                            "text-[7px] leading-tight font-medium",
-                                                            net >= 0
-                                                                ? "text-semantic-income"
-                                                                : "text-semantic-expense",
-                                                        )}
-                                                    >
-                                                        {net >= 0 ? "+" : "-"}
-                                                        {fmt(net)}
-                                                    </span>
-                                                )}
                                         </div>
                                     )}
                                 </div>

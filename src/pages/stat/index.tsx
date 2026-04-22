@@ -24,7 +24,6 @@ import { showSortableList } from "@/components/sortable";
 import { AnalysisCloud } from "@/components/stat/analysic-cloud";
 import { AnalysisDetail } from "@/components/stat/analysis-detail";
 import AnalysisMap from "@/components/stat/analysis-map";
-import { CalendarModule } from "@/components/stat/calendar-module";
 import { useChartPart } from "@/components/stat/chart-part";
 import { DateSliced, useDateSliced } from "@/components/stat/date-slice";
 import {
@@ -55,7 +54,6 @@ import { useLedgerStore } from "@/store/ledger";
 import { cn } from "@/utils";
 
 const DefaultModuleOrder: BillFilterViewModule[] = [
-    "calendar",
     "base-analysis",
     "top-words",
     "map",
@@ -409,15 +407,6 @@ export default function Page() {
                     </div>
                 );
             }
-            if (module === "calendar") {
-                return (
-                    <CalendarModule
-                        key={module}
-                        bills={filteredByCreator}
-                        range={realRange as [number, number]}
-                    />
-                );
-            }
             if (module === "top-expense") {
                 if (!dataSources.highestExpenseBill) return null;
                 return (
@@ -476,8 +465,6 @@ export default function Page() {
             analysisUnit,
             dataSources.highestExpenseBill,
             dataSources.highestIncomeBill,
-            filteredByCreator,
-            realRange,
             t,
             widgets,
         ],
