@@ -9,7 +9,7 @@ import type { Bill } from "@/ledger/type";
 import { useIntl } from "@/locale";
 import { useUserStore } from "@/store/user";
 import { cn } from "@/utils";
-import { denseTime, shortTime } from "@/utils/time";
+import { denseTime } from "@/utils/time";
 import CategoryIcon from "../category/icon";
 import SmartImage from "../image";
 import Money from "../money";
@@ -61,11 +61,22 @@ export default function BillItem({
             onClick={onClick}
         >
             {/* 左侧图标 + 信息 */}
-            <div className="flex items-center overflow-hidden">                <div
+            <div className="flex items-center overflow-hidden">
+                {" "}
+                <div
                     className="rounded-full w-10 h-10 flex-shrink-0 flex items-center justify-center"
-                    style={category?.color ? { backgroundColor: `${category.color}18` } : undefined}
+                    style={
+                        category?.color
+                            ? { backgroundColor: `${category.color}18` }
+                            : undefined
+                    }
                 >
-                    {category?.icon && <CategoryIcon icon={category.icon} color={category?.color} />}
+                    {category?.icon && (
+                        <CategoryIcon
+                            icon={category.icon}
+                            color={category?.color}
+                        />
+                    )}
                 </div>
                 <div className="flex flex-col px-4 overflow-hidden">
                     <div className="flex text-md gap-1 h-6">
@@ -125,7 +136,7 @@ export default function BillItem({
                         <div className="text-xs">
                             {currency.symbol}
                             <Money
-                                value={amountToNumber(bill.currency!.amount)}
+                                value={amountToNumber(bill.currency?.amount)}
                                 accurate
                             />
                         </div>

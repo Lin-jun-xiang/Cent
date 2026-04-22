@@ -28,7 +28,9 @@ export function CategoryItem({
             )}
             onMouseDown={onMouseDown}
             onClick={onClick}
-        >            <CategoryIcon
+        >
+            {" "}
+            <CategoryIcon
                 icon={category.icon}
                 className="w-4 h-4 flex-shrink-0"
                 color={category.color}

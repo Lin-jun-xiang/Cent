@@ -199,6 +199,7 @@ export function useChartPart({
             filtered[0]?.time,
             filtered[filtered.length - 1]?.time,
             filtered.length,
+            filtered,
         ],
     );
     const Part = (
@@ -422,11 +423,21 @@ function ListChart({
                         }}
                     >
                         <div className="flex justify-center items-center gap-2">
-                            {category && (                                <div
+                            {category && (
+                                <div
                                     className="size-10 rounded-full p-2 flex justify-center items-center"
-                                    style={category?.color ? { backgroundColor: `${category.color}18` } : undefined}
+                                    style={
+                                        category?.color
+                                            ? {
+                                                  backgroundColor: `${category.color}18`,
+                                              }
+                                            : undefined
+                                    }
                                 >
-                                    <CategoryIcon icon={category?.icon} color={category?.color} />
+                                    <CategoryIcon
+                                        icon={category?.icon}
+                                        color={category?.color}
+                                    />
                                 </div>
                             )}
                             {category?.name}

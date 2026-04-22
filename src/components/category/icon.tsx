@@ -38,13 +38,14 @@ export default function CategoryIcon({
     className?: string;
     icon: string;
     color?: string;
-}) {    // 判断是否为 <svg> 开头
+}) {
+    // 判断是否为 <svg> 开头
     const isSvgString = icon.trim().startsWith("<svg");
     const safeC = safeColor(color);
 
     if (isSvgString) {
         const useMaskMode = icon.includes(`data-render="mask"`);
-        const svgSrc = "data:image/svg+xml;utf8," + encodeURIComponent(icon);
+        const svgSrc = `data:image/svg+xml;utf8,${encodeURIComponent(icon)}`;
 
         if (useMaskMode) {
             // 用于 mask 的 SVG 需为不透明形状，将 currentColor 改为 black 以保证遮罩正确
@@ -52,14 +53,14 @@ export default function CategoryIcon({
                 /\bfill=["']currentColor["']/gi,
                 'fill="black"',
             );
-            const maskSvgSrc =
-                "data:image/svg+xml;utf8," + encodeURIComponent(maskSvg);
+            const maskSvgSrc = `data:image/svg+xml;utf8,${encodeURIComponent(maskSvg)}`;
             return (
                 <i
                     className={cn(
                         "inline-block w-4 h-4 min-w-4 min-h-4",
                         className,
-                    )}                    style={{
+                    )}
+                    style={{
                         backgroundColor: safeC,
                         WebkitMaskImage: `url(${maskSvgSrc})`,
                         maskImage: `url(${maskSvgSrc})`,
@@ -89,6 +90,11 @@ export default function CategoryIcon({
                 }}
             />
         );
-    }    // 否则当作 className 使用 (iconify icons use mask + background-color: currentColor)
-    return <i className={cn(icon, className)} style={{ color: safeC, backgroundColor: safeC }} />;
+    } // 否则当作 className 使用 (iconify icons use mask + background-color: currentColor)
+    return (
+        <i
+            className={cn(icon, className)}
+            style={{ color: safeC, backgroundColor: safeC }}
+        />
+    );
 }

@@ -11,8 +11,8 @@ import { useShallow } from "zustand/shallow";
 import { StorageAPI } from "@/api/storage";
 import CloudLoopIcon from "@/assets/icons/cloud-loop.svg?react";
 import AnimatedNumber from "@/components/animated-number";
-import { showBookGuide } from "@/components/book/util";
 import { showBillInfo } from "@/components/bill-info";
+import { showBookGuide } from "@/components/book/util";
 import BudgetCard from "@/components/budget/card";
 import { HintTooltip } from "@/components/hint";
 import { PaginationIndicator } from "@/components/indicator";
@@ -21,7 +21,11 @@ import BillItem from "@/components/ledger/item";
 import Loading from "@/components/loading";
 import Money from "@/components/money";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 import WidgetPreview from "@/components/widget/preview";
 import { useBudget } from "@/hooks/use-budget";
 import { useSnap } from "@/hooks/use-snap";
@@ -57,7 +61,8 @@ export default function Page() {
               ? "icon-[line-md--cloud-alt-print-loop]"
               : sync === "success"
                 ? "icon-[mdi--cloud-check-outline]"
-                : "icon-[mdi--cloud-remove-outline] text-red-600";    const [currentDate, setCurrentDate] = useState(dayjs());
+                : "icon-[mdi--cloud-remove-outline] text-red-600";
+    const [currentDate, setCurrentDate] = useState(dayjs());
     const [calendarOpen, setCalendarOpen] = useState(false);
     const [expandedView, setExpandedView] = useState(false);
     const ledgerRef = useRef<any>(null);
@@ -74,7 +79,7 @@ export default function Page() {
     }, []);
     const goToToday = useCallback(() => {
         setCurrentDate(dayjs());
-    }, []);    // --- Touch swipe support for day switching ---
+    }, []); // --- Touch swipe support for day switching ---
     const touchStartX = useRef<number | null>(null);
     const touchStartY = useRef<number | null>(null);
     const swipeLocked = useRef(false);
@@ -86,7 +91,8 @@ export default function Page() {
     }, []);
     const onTouchEnd = useCallback(
         (e: React.TouchEvent) => {
-            if (touchStartX.current === null || touchStartY.current === null) return;
+            if (touchStartX.current === null || touchStartY.current === null)
+                return;
             const dx = e.changedTouches[0].clientX - touchStartX.current;
             const dy = e.changedTouches[0].clientY - touchStartY.current;
             // Only trigger horizontal swipe if horizontal movement dominates
@@ -143,9 +149,12 @@ export default function Page() {
             useLedgerStore.getState().refreshBillList();
             allLoaded.current = true;
         }
-    }, [budgets.length]);    // Load all bills when viewing older dates or expanding
+    }, [budgets.length]); // Load all bills when viewing older dates or expanding
     useEffect(() => {
-        if (!allLoaded.current && (!currentDate.isSame(dayjs(), "day") || expandedView)) {
+        if (
+            !allLoaded.current &&
+            (!currentDate.isSame(dayjs(), "day") || expandedView)
+        ) {
             useLedgerStore.getState().refreshBillList();
             allLoaded.current = true;
         }
@@ -194,7 +203,9 @@ export default function Page() {
                     <div className="flex items-center gap-1">
                         <HintTooltip
                             persistKey={"cloudSyncHintShows"}
-                            content={"等待云同步完成后，其他设备即可获取最新的账单数据"}
+                            content={
+                                "等待云同步完成后，其他设备即可获取最新的账单数据"
+                            }
                         >
                             <button
                                 type="button"
@@ -204,7 +215,12 @@ export default function Page() {
                                 {sync === "syncing" ? (
                                     <CloudLoopIcon width={18} height={18} />
                                 ) : (
-                                    <i className={cn(syncIconClassName, "size-[18px]")}></i>
+                                    <i
+                                        className={cn(
+                                            syncIconClassName,
+                                            "size-[18px]",
+                                        )}
+                                    ></i>
                                 )}
                             </button>
                         </HintTooltip>
@@ -212,16 +228,21 @@ export default function Page() {
                             className="cursor-pointer flex items-center p-1"
                             type="button"
                             onClick={() => {
-                                if (!loading) useLedgerStore.getState().initCurrentBook();
+                                if (!loading)
+                                    useLedgerStore.getState().initCurrentBook();
                             }}
                         >
-                            <div className={cn("opacity-0", loading && "opacity-100")}>
+                            <div
+                                className={cn(
+                                    "opacity-0",
+                                    loading && "opacity-100",
+                                )}
+                            >
                                 <Loading className="[&_i]:size-[18px]" />
                             </div>
                         </button>
                     </div>
                 </div>
-
                 {/* ── Day selector with left/right arrows + calendar ── */}
                 <div className="flex items-center justify-center gap-3 px-2">
                     <button
@@ -236,7 +257,9 @@ export default function Page() {
                         onClick={goToToday}
                         className="text-base font-semibold px-4 py-1 rounded-full hover:bg-muted transition-colors cursor-pointer min-w-[120px] text-center"
                     >
-                        {isToday ? t("today") ?? "今日" : denseDate(currentDate)}
+                        {isToday
+                            ? (t("today") ?? "今日")
+                            : denseDate(currentDate)}
                     </button>
                     <button
                         type="button"
@@ -247,7 +270,8 @@ export default function Page() {
                         )}
                     >
                         <i className="icon-[mdi--chevron-right] size-6"></i>
-                    </button>                    <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                    </button>{" "}
+                    <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                         <PopoverTrigger asChild>
                             <button
                                 type="button"
@@ -266,7 +290,9 @@ export default function Page() {
                                         setCalendarOpen(false);
                                     }
                                 }}
-                                disabled={(date) => dayjs(date).isAfter(dayjs(), "day")}
+                                disabled={(date) =>
+                                    dayjs(date).isAfter(dayjs(), "day")
+                                }
                             />
                         </PopoverContent>
                     </Popover>
@@ -289,27 +315,34 @@ export default function Page() {
                         ></i>
                     </button>
                 </div>
-
                 {/* ── Expense / Income summary blocks ── */}
                 <div className="flex gap-3 px-2">
                     <div className="flex-1 rounded-xl bg-gradient-to-br from-rose-500 to-rose-600 text-white p-4 shadow-md shadow-rose-500/20">
-                        <div className="text-sm opacity-90 mb-1">{t("expense")}</div>
+                        <div className="text-sm opacity-90 mb-1">
+                            {t("expense")}
+                        </div>
                         <div className="text-2xl font-bold">
                             <Money value={todayExpense} />
                         </div>
                     </div>
                     <div className="flex-1 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white p-4 shadow-md shadow-emerald-500/20">
-                        <div className="text-sm opacity-90 mb-1">{t("income")}</div>
+                        <div className="text-sm opacity-90 mb-1">
+                            {t("income")}
+                        </div>
                         <div className="text-2xl font-bold">
                             <Money value={todayIncome} />
                         </div>
                     </div>
                 </div>
-
                 {/* ── Balance ── */}
                 <div className="text-center text-sm text-muted-foreground">
-                    {t("Balance")}: <AnimatedNumber value={balance} className="font-semibold inline-flex" />
-                </div>                {homeWidgets.length > 0 && (
+                    {t("Balance")}:{" "}
+                    <AnimatedNumber
+                        value={balance}
+                        className="font-semibold inline-flex"
+                    />
+                </div>{" "}
+                {homeWidgets.length > 0 && (
                     <div className="w-full flex flex-col gap-1">
                         <div
                             ref={widgetContainer}
@@ -348,15 +381,20 @@ export default function Page() {
                         />
                     </div>
                 )}
-            </div>            {/* ── Transaction list ── */}
+            </div>{" "}
+            {/* ── Transaction list ── */}
             <div
                 ref={billListRef}
                 className="flex-1 translate-0 pb-[10px] overflow-hidden"
                 onTouchStart={expandedView ? undefined : onTouchStart}
                 onTouchEnd={expandedView ? undefined : onTouchEnd}
             >
-                <div className="w-full h-full overflow-y-auto flex flex-col">                    <div className="px-2 pt-2 pb-1 flex items-center justify-between flex-shrink-0">
-                        <h3 className="font-semibold text-base">{t("transactions") ?? "交易記錄"}</h3>
+                <div className="w-full h-full overflow-y-auto flex flex-col">
+                    {" "}
+                    <div className="px-2 pt-2 pb-1 flex items-center justify-between flex-shrink-0">
+                        <h3 className="font-semibold text-base">
+                            {t("transactions") ?? "交易記錄"}
+                        </h3>
                         {!expandedView && (
                             <span className="text-xs text-muted-foreground">
                                 {currentDateBills.length} {t("item") ?? "筆"}
