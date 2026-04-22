@@ -18,6 +18,7 @@ import BillFilterForm from "./form";
 
 const BuiltInModules: { id: BillFilterViewModule; nameKey: string }[] = [
     { id: "base-analysis", nameKey: "module-base-analysis" },
+    { id: "calendar", nameKey: "module-calendar" },
     { id: "top-words", nameKey: "module-top-words" },
     { id: "map", nameKey: "module-map" },
     { id: "analysis", nameKey: "module-analysis" },

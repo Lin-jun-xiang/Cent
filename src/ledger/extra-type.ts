@@ -64,6 +64,7 @@ export type BillFilterViewModule =
     | "top-words" // AnalysisCloud 高频词云展示模块
     | "map" // AnalysisMap 地图模块
     | "analysis" // AnalysisDetail 简易分析模块
+    | "calendar" // 日历视图模块
     | "top-expense" // 最高支出模块
     | "top-income" // 最高收入模块
     | `widget-${string}`; // Widget 组件

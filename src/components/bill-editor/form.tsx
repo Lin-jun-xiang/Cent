@@ -297,8 +297,12 @@ export default function EditorForm({
                                 }}
                             >
                                 <div className="absolute inset-0 flex items-center justify-between px-3 pointer-events-none">
-                                    <span className="text-[8px] text-stone-500 dark:text-stone-400">{t("expense")}</span>
-                                    <span className="text-[8px] text-stone-500 dark:text-stone-400">{t("income")}</span>
+                                    <span className="text-[8px] text-stone-500 dark:text-stone-400">
+                                        {t("expense")}
+                                    </span>
+                                    <span className="text-[8px] text-stone-500 dark:text-stone-400">
+                                        {t("income")}
+                                    </span>
                                 </div>
                                 <Switch.Thumb className="w-1/2 h-full flex justify-center items-center transition-all rounded-md bg-semantic-expense text-white -translate-x-[22px] data-[state=checked]:bg-semantic-income data-[state=checked]:translate-x-[21px]">
                                     <span className="text-[8px]">
