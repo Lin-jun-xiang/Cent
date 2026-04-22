@@ -132,10 +132,12 @@ export default function BillInfo({
                 <div className="flex-1 flex flex-col">
                     {/* header */}
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                            <div className="w-12 h-12 flex-shrink-0 rounded-full bg-background border p-4 flex items-center justify-center">
+                        <div className="flex items-center">                            <div
+                                className="w-12 h-12 flex-shrink-0 rounded-full p-4 flex items-center justify-center"
+                                style={categoryInfo?.color ? { backgroundColor: `${categoryInfo.color}18` } : undefined}
+                            >
                                 {categoryInfo?.icon && (
-                                    <CategoryIcon icon={categoryInfo?.icon} />
+                                    <CategoryIcon icon={categoryInfo?.icon} color={categoryInfo?.color} />
                                 )}
                             </div>
                             <div className="flex text-md font-semibold px-2">

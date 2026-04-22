@@ -422,9 +422,11 @@ function ListChart({
                         }}
                     >
                         <div className="flex justify-center items-center gap-2">
-                            {category && (
-                                <div className="border size-10 rounded-full p-2 flex justify-center items-center">
-                                    <CategoryIcon icon={category?.icon} />
+                            {category && (                                <div
+                                    className="size-10 rounded-full p-2 flex justify-center items-center"
+                                    style={category?.color ? { backgroundColor: `${category.color}18` } : undefined}
+                                >
+                                    <CategoryIcon icon={category?.icon} color={category?.color} />
                                 </div>
                             )}
                             {category?.name}

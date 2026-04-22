@@ -61,9 +61,11 @@ export default function BillItem({
             onClick={onClick}
         >
             {/* 左侧图标 + 信息 */}
-            <div className="flex items-center overflow-hidden">
-                <div className="rounded-full bg-background border w-10 h-10 flex-shrink-0 flex items-center justify-center">
-                    {category?.icon && <CategoryIcon icon={category.icon} />}
+            <div className="flex items-center overflow-hidden">                <div
+                    className="rounded-full w-10 h-10 flex-shrink-0 flex items-center justify-center"
+                    style={category?.color ? { backgroundColor: `${category.color}18` } : undefined}
+                >
+                    {category?.icon && <CategoryIcon icon={category.icon} color={category?.color} />}
                 </div>
                 <div className="flex flex-col px-4 overflow-hidden">
                     <div className="flex text-md gap-1 h-6">

@@ -189,12 +189,15 @@ export default function CategoryEditForm({
                     </div>
                 }
             >
-                <div className="flex justify-center items-center gap-4">
-                    <div className="p-4 size-16 aspect-square rounded-full overflow-hidden border flex justify-center items-center">
+                <div className="flex justify-center items-center gap-4">                    <div
+                        className="p-4 size-16 aspect-square rounded-full overflow-hidden flex justify-center items-center"
+                        style={category?.color ? { backgroundColor: `${category.color}18` } : undefined}
+                    >
                         {category?.icon && (
                             <CategoryIcon
                                 icon={category?.icon}
                                 className={cn("w-full h-full")}
+                                color={category?.color}
                             />
                         )}
                     </div>
