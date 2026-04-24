@@ -63,9 +63,7 @@ export function CalendarModule({
             selectedCreatorIds && selectedCreatorIds.size > 0;
         for (const r of reminders) {
             if (r.done) continue;
-            if (
-                !r.targets?.some((id) => String(id) === String(userId))
-            )
+            if (!r.targets?.some((id) => String(id) === String(userId)))
                 continue;
             if (hasCreatorFilter) {
                 if (r.creatorId === undefined) continue;

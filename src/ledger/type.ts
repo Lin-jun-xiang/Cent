@@ -14,13 +14,13 @@ import type {
 } from "./extra-type";
 
 export type {
+    BillFilter,
+    BillTagGroup,
+    Budget,
     CustomCurrency,
     PersonalMeta,
-    BillFilter,
-    Budget,
-    BillTagGroup,
-    Scheduled,
     Reminder,
+    Scheduled,
 };
 
 /** 账单类型，代表收入或者支出 */
@@ -128,7 +128,7 @@ export type GlobalMeta = {
     map?: {
         amapKey?: string;
         amapSecurityCode?: string;
-    };    // Widget列表
+    }; // Widget列表
     widgets?: Widget[];
     // 行事曆提醒列表
     reminders?: Reminder[];

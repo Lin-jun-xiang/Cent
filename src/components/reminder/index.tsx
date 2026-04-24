@@ -1,9 +1,9 @@
 import dayjs from "dayjs";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import createConfirmProvider from "@/components/confirm";
 import { DatePicker } from "@/components/date-picker";
-import PopupLayout from "@/layouts/popup-layout";
 import { useCreators } from "@/hooks/use-creator";
+import PopupLayout from "@/layouts/popup-layout";
 import type { Reminder } from "@/ledger/type";
 import { useIntl } from "@/locale";
 import { useUserStore } from "@/store/user";
@@ -25,11 +25,14 @@ function ReminderEditForm({
     const t = useIntl();
     const userId = useUserStore((s) => s.id);
     const creators = useCreators();
+    const titleId = useId();
+    const commentId = useId();
 
     const defaultTime = useMemo(() => {
         // 預設台灣時間中午 12:00（即今日中午；使用者端時區大致為 UTC+8）
         return dayjs().hour(12).minute(0).second(0).valueOf();
-    }, []);    const [title, setTitle] = useState(edit?.title ?? "");
+    }, []);
+    const [title, setTitle] = useState(edit?.title ?? "");
     const [comment, setComment] = useState(edit?.comment ?? "");
     const [time, setTime] = useState<number>(edit?.time ?? defaultTime);
     const [priority, setPriority] = useState<"important" | "normal">(
@@ -73,7 +76,8 @@ function ReminderEditForm({
         targets.some((p) => String(p) === String(id));
 
     const submit = () => {
-        if (!title.trim()) return;        onConfirm?.({
+        if (!title.trim()) return;
+        onConfirm?.({
             ...edit,
             title: title.trim(),
             comment: comment.trim() || undefined,
@@ -96,21 +100,19 @@ function ReminderEditForm({
         >
             <div className="flex-1 overflow-y-auto px-4 pb-24 flex flex-col gap-3">
                 <div className="flex flex-col gap-1.5">
-                    <label
-                        htmlFor="reminder-title"
-                        className="text-sm font-medium"
-                    >
+                    <label htmlFor={titleId} className="text-sm font-medium">
                         {t("reminder-title") ?? "提醒標題"}
-                    </label>                    <Input
-                        id="reminder-title"
+                    </label>{" "}
+                    <Input
+                        id={titleId}
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder={
-                            t("reminder-title-placeholder") ??
-                            "例如：美髮"
+                            t("reminder-title-placeholder") ?? "例如：美髮"
                         }
                     />
-                </div>                <div className="flex flex-col gap-1.5">
+                </div>{" "}
+                <div className="flex flex-col gap-1.5">
                     <div className="text-sm font-medium">
                         {t("reminder-priority") ?? "重要性"}
                     </div>
@@ -124,8 +126,7 @@ function ReminderEditForm({
                                         "重要",
                                     icon: "icon-[mdi--alert-circle]",
                                     color: "text-rose-500",
-                                    active:
-                                        "bg-rose-500 text-white border-rose-500",
+                                    active: "bg-rose-500 text-white border-rose-500",
                                 },
                                 {
                                     key: "normal",
@@ -133,8 +134,7 @@ function ReminderEditForm({
                                         t("reminder-priority-normal") ?? "一般",
                                     icon: "icon-[mdi--calendar-clock-outline]",
                                     color: "text-amber-500",
-                                    active:
-                                        "bg-amber-500 text-white border-amber-500",
+                                    active: "bg-amber-500 text-white border-amber-500",
                                 },
                             ] as const
                         ).map((p) => (
@@ -164,7 +164,8 @@ function ReminderEditForm({
                 <div className="flex flex-col gap-1.5">
                     <div className="text-sm font-medium">
                         {t("reminder-time") ?? "提醒時間"}
-                    </div>                    <div className="border rounded-md px-2 py-1.5 flex items-center justify-between">
+                    </div>{" "}
+                    <div className="border rounded-md px-2 py-1.5 flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">
                             {dayjs(time).format("YYYY-MM-DD HH:mm")}
                         </span>
@@ -218,13 +219,11 @@ function ReminderEditForm({
                     </div>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                    <label
-                        htmlFor="reminder-comment"
-                        className="text-sm font-medium"
-                    >
+                    <label htmlFor={commentId} className="text-sm font-medium">
                         {t("comment")}
-                    </label>                    <Input
-                        id="reminder-comment"
+                    </label>{" "}
+                    <Input
+                        id={commentId}
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
                         placeholder={

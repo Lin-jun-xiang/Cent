@@ -141,7 +141,7 @@ export type Reminder = {
     /** 被提醒的使用者 ID 列表 */
     targets: (number | string)[];
     /** 創建者 */
-    creatorId?: number | string;    /** 額外備註 */
+    creatorId?: number | string /** 額外備註 */;
     comment?: string;
     /** 是否已完成（完成後不再提醒） */
     done?: boolean;

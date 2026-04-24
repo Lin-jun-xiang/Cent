@@ -1,4 +1,4 @@
-import dayjs from "dayjs";
+﻿import dayjs from "dayjs";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useShallow } from "zustand/shallow";
@@ -30,8 +30,8 @@ const saveNotified = (m: NotifiedMap) => {
 };
 
 /**
- * App 啟動時檢查 reminders，對當天或前一天的提醒（且當前使用者在 targets 內）
- * 彈出提示（一天一次，每個 reminder 一天只提示一次）
+ * App ???炎??reminders嚗??嗅予??銝憭拍???嚗??嗅?雿輻? targets ?改?
+ * 敶?內嚗?憭拐?甈∴?瘥?reminder 銝憭拙?內銝甈∴?
  */
 export function useReminderNotifier() {
     const reminders = useLedgerStore(
@@ -50,10 +50,10 @@ export function useReminderNotifier() {
         const notified = loadNotified();
         let changed = false;
 
-        // 先清理過期記錄，避免無限增長
+        // ?????????踹??⊿?憓
         for (const key of Object.keys(notified)) {
             if (notified[key] !== todayKey) {
-                // 保留7天內的記錄
+                // 靽?7憭拙????
                 const d = dayjs(notified[key]);
                 if (!d.isValid() || now.diff(d, "day") > 7) {
                     delete notified[key];
@@ -78,7 +78,7 @@ export function useReminderNotifier() {
                 ? t("reminder-today")
                 : t("reminder-tomorrow");
             const timeStr = when.format("MM/DD HH:mm");
-            toast.info(`${prefix} · ${timeStr}`, {
+            toast.info(`${prefix} 繚 ${timeStr}`, {
                 description: r.title || r.comment,
                 duration: 8000,
                 position: "top-center",

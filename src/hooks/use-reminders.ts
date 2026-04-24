@@ -13,15 +13,12 @@ import { useUserStore } from "@/store/user";
  */
 export function useReminders() {
     const reminders = useLedgerStore(
-        useShallow(
-            (state): Reminder[] => state.infos?.meta.reminders ?? [],
-        ),
+        useShallow((state): Reminder[] => state.infos?.meta.reminders ?? []),
     );
 
     const add = useCallback(
         async (r: Omit<Reminder, "id"> & { id?: string }) => {
-            const creatorId =
-                r.creatorId ?? useUserStore.getState().id;
+            const creatorId = r.creatorId ?? useUserStore.getState().id;
             const id = r.id ?? v4();
             await useLedgerStore.getState().updateGlobalMeta((prev) => {
                 const list = prev.reminders ? [...prev.reminders] : [];

@@ -211,8 +211,12 @@ export default function Page() {
     }, [bills]);
 
     // --- Reminder quick add ---
-    const { reminders, add: addReminder, update: updateReminder, remove: removeReminder } =
-        useReminders();
+    const {
+        reminders,
+        add: addReminder,
+        update: updateReminder,
+        remove: removeReminder,
+    } = useReminders();
     const goAddReminder = useCallback(async () => {
         try {
             const d = new Date(currentDate.valueOf());
@@ -564,8 +568,7 @@ export default function Page() {
                                             String(userId);
                                         const creatorName = isMine
                                             ? (t("me") ?? "我")
-                                            : (creator?.name ??
-                                              "unknown-user");
+                                            : (creator?.name ?? "unknown-user");
                                         return (
                                             // biome-ignore lint/a11y/useKeyWithClickEvents: reminder item
                                             // biome-ignore lint/a11y/noStaticElementInteractions: reminder item
@@ -613,9 +616,7 @@ export default function Page() {
                                                         {r.title}
                                                     </div>
                                                     <div className="flex text-xs">
-                                                        <div>
-                                                            {creatorName}
-                                                        </div>
+                                                        <div>{creatorName}</div>
                                                         {r.comment && (
                                                             <>
                                                                 <div className="px-1">
@@ -649,8 +650,7 @@ export default function Page() {
                                 </div>
                             ) : (
                                 <div className="mx-2 text-xs text-center text-muted-foreground/60 py-3 border rounded-md border-dashed">
-                                    {t("no-reminders-today") ??
-                                        "今日暫無提醒"}
+                                    {t("no-reminders-today") ?? "今日暫無提醒"}
                                 </div>
                             )}
                         </div>

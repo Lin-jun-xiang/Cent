@@ -11,11 +11,11 @@ import { CategoryListProvider } from "@/components/category";
 import { CurrencyListProvider } from "@/components/currency";
 import { ModalProvider } from "@/components/modal";
 import Navigation from "@/components/navigation";
+import { ReminderEditProvider } from "@/components/reminder";
 import {
     ScheduledEditProvider,
     ScheduledProvider,
 } from "@/components/scheduled";
-import { ReminderEditProvider } from "@/components/reminder";
 import { Settings } from "@/components/settings";
 import { SortableListProvider } from "@/components/sortable";
 import { SortableListWithEnableProvider } from "@/components/sortable/enable";
@@ -54,7 +54,8 @@ export default function MainLayout() {
     applyScheduledRef.current = applyScheduled;
     useEffect(() => {
         applyScheduledRef.current();
-    }, []);    useInitPreset();
+    }, []);
+    useInitPreset();
     useReminderNotifier();
 
     return (
@@ -75,7 +76,7 @@ export default function MainLayout() {
                 <BookConfirmProvider />
                 <BudgetProvider />
                 <BudgetEditProvider />
-                <BudgetDetailProvider />                <ScheduledProvider />
+                <BudgetDetailProvider /> <ScheduledProvider />
                 <ScheduledEditProvider />
                 <ReminderEditProvider />
                 <TagListProvider />

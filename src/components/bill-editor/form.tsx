@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import useCategory from "@/hooks/use-category";
 import { useCreators } from "@/hooks/use-creator";
 import { useCurrency } from "@/hooks/use-currency";
 import { useReminders } from "@/hooks/use-reminders";
@@ -14,7 +15,6 @@ import { usePreferenceStore } from "@/store/preference";
 import { useUserStore } from "@/store/user";
 import { cn } from "@/utils";
 import { getPredictNow } from "@/utils/predict";
-import useCategory from "@/hooks/use-category";
 import { showTagList } from "../bill-tag";
 import { showCategoryList } from "../category";
 import { CategoryItem } from "../category/item";
@@ -284,9 +284,9 @@ export default function EditorForm({
         }
         return ids;
     }, [creators, currentUserId]);
-    const [reminderTargets, setReminderTargets] = useState<
-        (number | string)[]
-    >(() => [currentUserId]);
+    const [reminderTargets, setReminderTargets] = useState<(number | string)[]>(
+        () => [currentUserId],
+    );
     const targetsTouchedRef = useRef(false);
     // 協作者載入/變化時，若使用者尚未手動調整，同步為「全部」
     useEffect(() => {
@@ -415,8 +415,7 @@ export default function EditorForm({
                                         },
                                         {
                                             key: "reminder",
-                                            label:
-                                                t("reminder") ?? "提醒",
+                                            label: t("reminder") ?? "提醒",
                                             bg: "bg-amber-500",
                                         },
                                     ] as const
@@ -524,258 +523,283 @@ export default function EditorForm({
                     />
                 ) : (
                     <>
-                {/* categories */}
-                <div className="flex-1 flex-shrink-0 overflow-y-auto min-h-[80px] scrollbar-hidden flex flex-col px-2 text-sm font-medium gap-2">
-                    <div className="flex flex-col min-h-[80px] grow-[2] shrink overflow-y-auto scrollbar-hidden w-full">
-                        <div
-                            className={cn(
-                                "grid gap-1",
-                                categoriesGridClassName(categories),
+                        {/* categories */}
+                        <div className="flex-1 flex-shrink-0 overflow-y-auto min-h-[80px] scrollbar-hidden flex flex-col px-2 text-sm font-medium gap-2">
+                            <div className="flex flex-col min-h-[80px] grow-[2] shrink overflow-y-auto scrollbar-hidden w-full">
+                                <div
+                                    className={cn(
+                                        "grid gap-1",
+                                        categoriesGridClassName(categories),
+                                    )}
+                                >
+                                    {categories.map((item) => (
+                                        <CategoryItem
+                                            key={item.id}
+                                            category={item}
+                                            selected={
+                                                billState.categoryId === item.id
+                                            }
+                                            onMouseDown={() => {
+                                                handleParentCategoryClick(
+                                                    item.id,
+                                                );
+                                            }}
+                                        />
+                                    ))}
+                                    <button
+                                        type="button"
+                                        className={cn(
+                                            `rounded-lg border flex-1 py-1 px-2 h-8 flex gap-2 items-center justify-center whitespace-nowrap cursor-pointer`,
+                                        )}
+                                        onClick={() => {
+                                            showCategoryList(billState.type);
+                                        }}
+                                    >
+                                        <i className="icon-[mdi--settings]"></i>
+                                        {t("edit")}
+                                    </button>
+                                </div>
+                            </div>
+                            {(subCategories?.length ?? 0) > 0 && (
+                                <div className="flex flex-col min-h-[68px] grow-[1] shrink max-h-fit overflow-y-auto rounded-md border p-2 shadow scrollbar-hidden">
+                                    <div
+                                        className={cn(
+                                            "grid gap-1",
+                                            categoriesGridClassName(
+                                                subCategories,
+                                            ),
+                                        )}
+                                    >
+                                        {subCategories?.map((subCategory) => {
+                                            return (
+                                                <CategoryItem
+                                                    key={subCategory.id}
+                                                    category={subCategory}
+                                                    selected={
+                                                        billState.categoryId ===
+                                                        subCategory.id
+                                                    }
+                                                    onMouseDown={() => {
+                                                        setBillState((v) => ({
+                                                            ...v,
+                                                            categoryId:
+                                                                subCategory.id,
+                                                        }));
+                                                    }}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                </div>
                             )}
+                        </div>
+                        {/* tags */}
+                        <div
+                            ref={tagSelectorRef}
+                            className="w-full h-[40px] flex-shrink-0 flex-grow-0 flex gap-1 py-1 items-center overflow-x-auto px-2 text-sm font-medium scrollbar-hidden"
                         >
-                            {categories.map((item) => (
-                                <CategoryItem
-                                    key={item.id}
-                                    category={item}
-                                    selected={billState.categoryId === item.id}
-                                    onMouseDown={() => {
-                                        handleParentCategoryClick(item.id);
-                                    }}
-                                />
-                            ))}
+                            <TagGroupSelector
+                                isCreate={isCreate}
+                                selectedTags={billState.tagIds}
+                                onSelectChange={(newTagIds, extra) => {
+                                    setBillState((prev) => ({
+                                        ...prev,
+                                        tagIds: newTagIds,
+                                    }));
+                                    if (extra?.preferCurrency) {
+                                        changeCurrency(extra.preferCurrency);
+                                    }
+                                }}
+                            />
                             <button
                                 type="button"
                                 className={cn(
-                                    `rounded-lg border flex-1 py-1 px-2 h-8 flex gap-2 items-center justify-center whitespace-nowrap cursor-pointer`,
+                                    `rounded-lg border py-1 px-2 h-8 flex gap-2 items-center justify-center whitespace-nowrap cursor-pointer`,
                                 )}
                                 onClick={() => {
-                                    showCategoryList(billState.type);
+                                    showTagList();
                                 }}
                             >
-                                <i className="icon-[mdi--settings]"></i>
-                                {t("edit")}
+                                <i className="icon-[mdi--tag-text-outline]"></i>
+                                {t("edit-tags")}
                             </button>
                         </div>
-                    </div>
-                    {(subCategories?.length ?? 0) > 0 && (
-                        <div className="flex flex-col min-h-[68px] grow-[1] shrink max-h-fit overflow-y-auto rounded-md border p-2 shadow scrollbar-hidden">
-                            <div
-                                className={cn(
-                                    "grid gap-1",
-                                    categoriesGridClassName(subCategories),
-                                )}
-                            >
-                                {subCategories?.map((subCategory) => {
-                                    return (
-                                        <CategoryItem
-                                            key={subCategory.id}
-                                            category={subCategory}
-                                            selected={
-                                                billState.categoryId ===
-                                                subCategory.id
-                                            }
-                                            onMouseDown={() => {
-                                                setBillState((v) => ({
-                                                    ...v,
-                                                    categoryId: subCategory.id,
-                                                }));
-                                            }}
-                                        />
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-                </div>
-                {/* tags */}
-                <div
-                    ref={tagSelectorRef}
-                    className="w-full h-[40px] flex-shrink-0 flex-grow-0 flex gap-1 py-1 items-center overflow-x-auto px-2 text-sm font-medium scrollbar-hidden"
-                >
-                    <TagGroupSelector
-                        isCreate={isCreate}
-                        selectedTags={billState.tagIds}
-                        onSelectChange={(newTagIds, extra) => {
-                            setBillState((prev) => ({
-                                ...prev,
-                                tagIds: newTagIds,
-                            }));
-                            if (extra?.preferCurrency) {
-                                changeCurrency(extra.preferCurrency);
-                            }
-                        }}
-                    />
-                    <button
-                        type="button"
-                        className={cn(
-                            `rounded-lg border py-1 px-2 h-8 flex gap-2 items-center justify-center whitespace-nowrap cursor-pointer`,
-                        )}
-                        onClick={() => {
-                            showTagList();
-                        }}
-                    >
-                        <i className="icon-[mdi--tag-text-outline]"></i>
-                        {t("edit-tags")}
-                    </button>
-                </div>
-                {/* keyboard area */}{" "}
-                <div
-                    className={cn(
-                        "h-[calc(480px+160px*(var(--bekh,0.5)-0.5))] sm:h-[calc(380px+160px*(var(--bekh,0.5)-0.5))] min-h-[264px] max-h-[calc(100%-124px)]",
-                        "keyboard-field relative flex gap-2 flex-col justify-start bg-gradient-to-b from-stone-100 to-stone-200 text-stone-800 dark:from-teal-900 dark:to-teal-950 dark:text-white sm:rounded-b-md p-2 pb-[max(env(safe-area-inset-bottom),8px)]",
-                    )}
-                >
-                    <ResizeHandle />
-                    <div className="flex justify-between items-center">
-                        <div className="flex gap-2 items-center h-10">
-                            <div className="flex items-center h-full">
-                                {(billState.images?.length ?? 0) > 0 && (
-                                    <div className="pr-2 flex gap-[6px] items-center overflow-x-auto max-w-22 h-full scrollbar-hidden">
-                                        {billState.images?.map((img, index) => (
+                        {/* keyboard area */}{" "}
+                        <div
+                            className={cn(
+                                "h-[calc(480px+160px*(var(--bekh,0.5)-0.5))] sm:h-[calc(380px+160px*(var(--bekh,0.5)-0.5))] min-h-[264px] max-h-[calc(100%-124px)]",
+                                "keyboard-field relative flex gap-2 flex-col justify-start bg-gradient-to-b from-stone-100 to-stone-200 text-stone-800 dark:from-teal-900 dark:to-teal-950 dark:text-white sm:rounded-b-md p-2 pb-[max(env(safe-area-inset-bottom),8px)]",
+                            )}
+                        >
+                            <ResizeHandle />
+                            <div className="flex justify-between items-center">
+                                <div className="flex gap-2 items-center h-10">
+                                    <div className="flex items-center h-full">
+                                        {(billState.images?.length ?? 0) >
+                                            0 && (
+                                            <div className="pr-2 flex gap-[6px] items-center overflow-x-auto max-w-22 h-full scrollbar-hidden">
+                                                {billState.images?.map(
+                                                    (img, index) => (
+                                                        <Deletable
+                                                            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                                                            key={index}
+                                                            onDelete={() => {
+                                                                setBillState(
+                                                                    (v) => ({
+                                                                        ...v,
+                                                                        images: v.images?.filter(
+                                                                            (
+                                                                                m,
+                                                                            ) =>
+                                                                                m !==
+                                                                                img,
+                                                                        ),
+                                                                    }),
+                                                                );
+                                                            }}
+                                                        >
+                                                            <SmartImage
+                                                                source={img}
+                                                                alt=""
+                                                                className="w-6 h-6 object-cover rounded"
+                                                            />
+                                                        </Deletable>
+                                                    ),
+                                                )}
+                                            </div>
+                                        )}
+                                        {(billState.images?.length ?? 0) <
+                                            3 && (
+                                            <button
+                                                type="button"
+                                                className="px-1 flex justify-center items-center rounded-full transition-all cursor-pointer"
+                                                onClick={chooseImage}
+                                            >
+                                                <i className="icon-xs icon-[mdi--image-plus-outline] text-[white]"></i>
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="h-full flex items-center">
+                                        {billState?.location ? (
                                             <Deletable
-                                                // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-                                                key={index}
                                                 onDelete={() => {
-                                                    setBillState((v) => ({
-                                                        ...v,
-                                                        images: v.images?.filter(
-                                                            (m) => m !== img,
-                                                        ),
-                                                    }));
+                                                    setBillState((prev) => {
+                                                        return {
+                                                            ...prev,
+                                                            location: undefined,
+                                                        };
+                                                    });
                                                 }}
                                             >
-                                                <SmartImage
-                                                    source={img}
-                                                    alt=""
-                                                    className="w-6 h-6 object-cover rounded"
-                                                />
+                                                <i className="w-5 icon-[mdi--location-radius]"></i>
                                             </Deletable>
-                                        ))}
+                                        ) : (
+                                            <CurrentLocation
+                                                ref={locationRef}
+                                                className="px-1 flex items-center justify-center"
+                                                onValueChange={(v) => {
+                                                    setBillState((prev) => {
+                                                        return {
+                                                            ...prev,
+                                                            location: v,
+                                                        };
+                                                    });
+                                                }}
+                                            >
+                                                <i className="icon-[mdi--add-location]" />
+                                            </CurrentLocation>
+                                        )}
                                     </div>
-                                )}
-                                {(billState.images?.length ?? 0) < 3 && (
-                                    <button
-                                        type="button"
-                                        className="px-1 flex justify-center items-center rounded-full transition-all cursor-pointer"
-                                        onClick={chooseImage}
-                                    >
-                                        <i className="icon-xs icon-[mdi--image-plus-outline] text-[white]"></i>
-                                    </button>
-                                )}
-                            </div>
-                            <div className="h-full flex items-center">
-                                {billState?.location ? (
-                                    <Deletable
-                                        onDelete={() => {
-                                            setBillState((prev) => {
-                                                return {
-                                                    ...prev,
-                                                    location: undefined,
-                                                };
-                                            });
-                                        }}
-                                    >
-                                        <i className="w-5 icon-[mdi--location-radius]"></i>
-                                    </Deletable>
-                                ) : (
-                                    <CurrentLocation
-                                        ref={locationRef}
-                                        className="px-1 flex items-center justify-center"
-                                        onValueChange={(v) => {
-                                            setBillState((prev) => {
-                                                return { ...prev, location: v };
-                                            });
-                                        }}
-                                    >
-                                        <i className="icon-[mdi--add-location]" />
-                                    </CurrentLocation>
-                                )}
-                            </div>
-                            <div className="rounded-full transition-all hover:(bg-stone-700) active:(bg-stone-500)">
-                                <DatePicker
-                                    fixedTime
-                                    value={billState.time}
-                                    onChange={(time) => {
-                                        setBillState((prev) => {
-                                            if (!prev.currency) {
-                                                return {
-                                                    ...prev,
-                                                    time: time,
-                                                };
-                                            }
-                                            const { predict } = convert(
-                                                amountToNumber(
-                                                    prev.currency?.amount ??
-                                                        prev.amount,
-                                                ),
-                                                prev.currency.target,
-                                                baseCurrency.id,
-                                                time,
-                                            );
-                                            return {
-                                                ...prev,
-                                                time: time,
-                                                amount: numberToAmount(predict),
-                                                currency: {
-                                                    base: baseCurrency.id,
-                                                    target: prev.currency
-                                                        .target,
-                                                    amount:
-                                                        prev.currency?.amount ??
-                                                        prev.amount,
-                                                },
-                                            };
-                                        });
-                                    }}
-                                />
-                            </div>
-                        </div>
-                        <RemarkHint
-                            recommends={predictComments}
-                            onSelect={(v) => {
-                                setBillState((prev) => ({
-                                    ...prev,
-                                    comment: `${prev.comment} ${v}`,
-                                }));
-                            }}
-                        >
-                            <div className="flex h-full flex-1">
-                                <IOSUnscrolledInput
-                                    value={billState.comment}
-                                    onChange={(e) => {
-                                        setBillState((v) => ({
-                                            ...v,
-                                            comment: e.target.value,
+                                    <div className="rounded-full transition-all hover:(bg-stone-700) active:(bg-stone-500)">
+                                        <DatePicker
+                                            fixedTime
+                                            value={billState.time}
+                                            onChange={(time) => {
+                                                setBillState((prev) => {
+                                                    if (!prev.currency) {
+                                                        return {
+                                                            ...prev,
+                                                            time: time,
+                                                        };
+                                                    }
+                                                    const { predict } = convert(
+                                                        amountToNumber(
+                                                            prev.currency
+                                                                ?.amount ??
+                                                                prev.amount,
+                                                        ),
+                                                        prev.currency.target,
+                                                        baseCurrency.id,
+                                                        time,
+                                                    );
+                                                    return {
+                                                        ...prev,
+                                                        time: time,
+                                                        amount: numberToAmount(
+                                                            predict,
+                                                        ),
+                                                        currency: {
+                                                            base: baseCurrency.id,
+                                                            target: prev
+                                                                .currency
+                                                                .target,
+                                                            amount:
+                                                                prev.currency
+                                                                    ?.amount ??
+                                                                prev.amount,
+                                                        },
+                                                    };
+                                                });
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                                <RemarkHint
+                                    recommends={predictComments}
+                                    onSelect={(v) => {
+                                        setBillState((prev) => ({
+                                            ...prev,
+                                            comment: `${prev.comment} ${v}`,
                                         }));
                                     }}
-                                    type="text"
-                                    className="w-full bg-transparent text-stone-800 dark:text-white text-right placeholder-opacity-50 outline-none"
-                                    placeholder={t("comment")}
-                                    enterKeyHint="done"
-                                />
-                            </div>
-                        </RemarkHint>
-                    </div>{" "}
-                    <button
-                        type="button"
-                        className="flex h-[80px] min-h-[48px] justify-center items-center bg-teal-600 hover:bg-teal-500 dark:bg-gradient-to-r dark:from-teal-700 dark:to-teal-600 rounded-xl font-bold text-lg text-white cursor-pointer shadow-md shadow-teal-700/20 active:scale-[0.98] transition-all"
-                        onClick={toConfirm}
-                    >
-                        <i className="icon-[mdi--check] icon-md"></i>
-                    </button>
-                    <Calculator.Keyboard
-                        className={cn("flex-1")}
-                        onKey={(v) => {
-                            if (v === "r") {
-                                toConfirm();
-                                setTimeout(() => {
-                                    goAddBill();
-                                }, 10);
-                            }
-                        }}
-                    />
-                </div>
-                </>
+                                >
+                                    <div className="flex h-full flex-1">
+                                        <IOSUnscrolledInput
+                                            value={billState.comment}
+                                            onChange={(e) => {
+                                                setBillState((v) => ({
+                                                    ...v,
+                                                    comment: e.target.value,
+                                                }));
+                                            }}
+                                            type="text"
+                                            className="w-full bg-transparent text-stone-800 dark:text-white text-right placeholder-opacity-50 outline-none"
+                                            placeholder={t("comment")}
+                                            enterKeyHint="done"
+                                        />
+                                    </div>
+                                </RemarkHint>
+                            </div>{" "}
+                            <button
+                                type="button"
+                                className="flex h-[80px] min-h-[48px] justify-center items-center bg-teal-600 hover:bg-teal-500 dark:bg-gradient-to-r dark:from-teal-700 dark:to-teal-600 rounded-xl font-bold text-lg text-white cursor-pointer shadow-md shadow-teal-700/20 active:scale-[0.98] transition-all"
+                                onClick={toConfirm}
+                            >
+                                <i className="icon-[mdi--check] icon-md"></i>
+                            </button>
+                            <Calculator.Keyboard
+                                className={cn("flex-1")}
+                                onKey={(v) => {
+                                    if (v === "r") {
+                                        toConfirm();
+                                        setTimeout(() => {
+                                            goAddBill();
+                                        }, 10);
+                                    }
+                                }}
+                            />
+                        </div>
+                    </>
                 )}
             </PopupLayout>
         </Calculator.Root>
@@ -848,19 +872,18 @@ function ReminderModeBody({
                         [
                             {
                                 key: "important",
-                                label: t("reminder-priority-important") ?? "重要",
+                                label:
+                                    t("reminder-priority-important") ?? "重要",
                                 icon: "icon-[mdi--alert-circle]",
                                 color: "text-rose-500",
-                                active:
-                                    "bg-rose-500 text-white border-rose-500",
+                                active: "bg-rose-500 text-white border-rose-500",
                             },
                             {
                                 key: "normal",
                                 label: t("reminder-priority-normal") ?? "一般",
                                 icon: "icon-[mdi--calendar-clock-outline]",
                                 color: "text-amber-500",
-                                active:
-                                    "bg-amber-500 text-white border-amber-500",
+                                active: "bg-amber-500 text-white border-amber-500",
                             },
                         ] as const
                     ).map((p) => (
@@ -879,9 +902,7 @@ function ReminderModeBody({
                                 className={cn(
                                     "size-4",
                                     p.icon,
-                                    priority === p.key
-                                        ? ""
-                                        : p.color,
+                                    priority === p.key ? "" : p.color,
                                 )}
                             />
                             {p.label}
