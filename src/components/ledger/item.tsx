@@ -20,6 +20,7 @@ interface BillItemProps {
     className?: string;
     showTime?: boolean;
     showAssets?: boolean;
+    onDelete?: () => void;
 }
 
 export default function BillItem({
@@ -28,6 +29,7 @@ export default function BillItem({
     onClick,
     showTime,
     showAssets,
+    onDelete,
 }: BillItemProps) {
     const t = useIntl();
     const { categories } = useCategory();
@@ -120,35 +122,50 @@ export default function BillItem({
             </div>
 
             {/* 金额 */}
-            <div className="bill-item-tail text-right">
-                <div
-                    className={`text-lg font-bold truncate flex-shrink-0 flex flex-col items-end ${
-                        bill.type === "expense"
-                            ? "text-semantic-expense"
-                            : bill.type === "income"
-                              ? "text-semantic-income"
-                              : ""
-                    }`}
-                >
-                    <Money value={amountToNumber(bill.amount)} accurate />
+            <div className="flex items-center gap-1 ml-auto">
+                <div className="bill-item-tail text-right">
+                    <div
+                        className={`text-lg font-bold truncate flex-shrink-0 flex flex-col items-end ${
+                            bill.type === "expense"
+                                ? "text-semantic-expense"
+                                : bill.type === "income"
+                                  ? "text-semantic-income"
+                                  : ""
+                        }`}
+                    >
+                        <Money value={amountToNumber(bill.amount)} accurate />
 
-                    {currency && (
-                        <div className="text-xs">
-                            {currency.symbol}
-                            <Money
-                                value={amountToNumber(
-                                    bill.currency?.amount ?? 0,
-                                )}
-                                accurate
-                            />
+                        {currency && (
+                            <div className="text-xs">
+                                {currency.symbol}
+                                <Money
+                                    value={amountToNumber(
+                                        bill.currency?.amount ?? 0,
+                                    )}
+                                    accurate
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {showTime && (
+                        <div className="text-[8px] text-foreground/60">
+                            {denseTime(bill.time)}
                         </div>
                     )}
                 </div>
-
-                {showTime && (
-                    <div className="text-[8px] text-foreground/60">
-                        {denseTime(bill.time)}
-                    </div>
+                {onDelete && (
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete();
+                        }}
+                        className="p-1 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors flex-shrink-0"
+                        aria-label="delete"
+                    >
+                        <i className="icon-[mdi--trash-can-outline] size-4" />
+                    </button>
                 )}
             </div>
         </button>

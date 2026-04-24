@@ -1,7 +1,7 @@
-import { Switch } from "radix-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import useCategory from "@/hooks/use-category";
+import { useCreators } from "@/hooks/use-creator";
 import { useCurrency } from "@/hooks/use-currency";
+import { useReminders } from "@/hooks/use-reminders";
 import { useWheelScrollX } from "@/hooks/use-wheel-scroll";
 import PopupLayout from "@/layouts/popup-layout";
 import { amountToNumber, numberToAmount } from "@/ledger/bill";
@@ -11,8 +11,10 @@ import { categoriesGridClassName } from "@/ledger/utils";
 import { useIntl } from "@/locale";
 import type { EditBill } from "@/store/ledger";
 import { usePreferenceStore } from "@/store/preference";
+import { useUserStore } from "@/store/user";
 import { cn } from "@/utils";
 import { getPredictNow } from "@/utils/predict";
+import useCategory from "@/hooks/use-category";
 import { showTagList } from "../bill-tag";
 import { showCategoryList } from "../category";
 import { CategoryItem } from "../category/item";
@@ -23,6 +25,8 @@ import SmartImage from "../image";
 import IOSUnscrolledInput from "../input";
 import Calculator from "../keyboard";
 import CurrentLocation from "../simple-location";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
 import { goAddBill } from ".";
 import { RemarkHint } from "./remark";
@@ -149,10 +153,16 @@ export default function EditorForm({
     }, [billState.categoryId, categories]);
 
     const toConfirm = useCallback(() => {
+        if (reminderSubmitRef.current) {
+            reminderSubmitRef.current();
+            return;
+        }
         onConfirm?.({
             ...billState,
         });
     }, [onConfirm, billState]);
+
+    const reminderSubmitRef = useRef<(() => void) | null>(null);
 
     const chooseImage = async () => {
         const [file] = await showFilePicker({ accept: FORMAT_IMAGE_SUPPORTED });
@@ -243,6 +253,117 @@ export default function EditorForm({
 
     const tagSelectorRef = useRef<HTMLDivElement>(null);
     useWheelScrollX(tagSelectorRef);
+
+    // --- 提醒模式 ---
+    // 在編輯已存在帳單時不允許切換到提醒（只有新增才有三個模式）
+    type EditorMode = "expense" | "income" | "reminder";
+    const [mode, setMode] = useState<EditorMode>(
+        (edit as any)?._mode === "reminder"
+            ? "reminder"
+            : (billState.type as EditorMode),
+    );
+
+    // 提醒相關狀態
+    const { add: addReminder } = useReminders();
+    const { id: currentUserId } = useUserStore();
+    const creators = useCreators();
+    const [reminderTitle, setReminderTitle] = useState<string>("");
+    const [reminderTime, setReminderTime] = useState<number>(() => {
+        // 預設：今日中午 12:00（台灣時間 ≈ 本地時間）
+        const d = new Date();
+        d.setHours(12, 0, 0, 0);
+        return d.getTime();
+    });
+    // 預設「全部」：所有協作者 + 自己（去重）
+    const allTargetIds = useMemo(() => {
+        const ids: (number | string)[] = [currentUserId];
+        for (const c of creators) {
+            if (!ids.some((x) => String(x) === String(c.id))) {
+                ids.push(c.id);
+            }
+        }
+        return ids;
+    }, [creators, currentUserId]);
+    const [reminderTargets, setReminderTargets] = useState<
+        (number | string)[]
+    >(() => [currentUserId]);
+    const targetsTouchedRef = useRef(false);
+    // 協作者載入/變化時，若使用者尚未手動調整，同步為「全部」
+    useEffect(() => {
+        if (!targetsTouchedRef.current) {
+            setReminderTargets(allTargetIds);
+        }
+    }, [allTargetIds]);
+    const [reminderComment, setReminderComment] = useState<string>("");
+    const [reminderPriority, setReminderPriority] = useState<
+        "important" | "normal"
+    >("normal");
+
+    const toggleReminderTarget = useCallback((id: number | string) => {
+        targetsTouchedRef.current = true;
+        setReminderTargets((prev) => {
+            if (prev.some((p) => String(p) === String(id))) {
+                return prev.filter((p) => String(p) !== String(id));
+            }
+            return [...prev, id];
+        });
+    }, []);
+
+    // 保持 billState.type 與 mode 同步（若為 expense/income）
+    useEffect(() => {
+        if (mode === "expense" || mode === "income") {
+            setBillState((v) =>
+                v.type === mode
+                    ? v
+                    : {
+                          ...v,
+                          type: mode,
+                          categoryId:
+                              mode === "expense"
+                                  ? ExpenseBillCategories[0].id
+                                  : IncomeBillCategories[0].id,
+                      },
+            );
+        }
+    }, [mode]);
+
+    // reminder 模式下的提交邏輯
+    useEffect(() => {
+        if (mode !== "reminder") {
+            reminderSubmitRef.current = null;
+            return;
+        }
+        reminderSubmitRef.current = () => {
+            if (!reminderTitle.trim()) return;
+            addReminder({
+                title: reminderTitle.trim(),
+                time: reminderTime,
+                targets:
+                    reminderTargets.length > 0
+                        ? reminderTargets
+                        : [currentUserId],
+                comment: reminderComment.trim() || undefined,
+                creatorId: currentUserId,
+                priority: reminderPriority,
+            });
+            // 關閉彈窗（不儲存帳單）
+            onCancel?.();
+        };
+        return () => {
+            reminderSubmitRef.current = null;
+        };
+    }, [
+        mode,
+        reminderTitle,
+        reminderTime,
+        reminderTargets,
+        reminderComment,
+        reminderPriority,
+        currentUserId,
+        addReminder,
+        onCancel,
+    ]);
+
     return (
         <Calculator.Root
             multiplyKey={multiplyKey}
@@ -279,39 +400,47 @@ export default function EditorForm({
                 title={
                     <div className="pl-[54px] w-full min-h-12 rounded-lg flex pt-2 pb-0 overflow-hidden scrollbar-hidden">
                         <div className="text-stone-800 dark:text-white">
-                            <Switch.Root
-                                className="w-24 h-12 relative bg-stone-200 dark:bg-stone-900 rounded-lg p-1 flex justify-center items-center"
-                                checked={billState.type === "income"}
-                                onCheckedChange={() => {
-                                    setBillState((v) => ({
-                                        ...v,
-                                        type:
-                                            v.type === "expense"
-                                                ? "income"
-                                                : "expense",
-                                        categoryId:
-                                            v.type === "expense"
-                                                ? IncomeBillCategories[0].id
-                                                : ExpenseBillCategories[0].id,
-                                    }));
-                                }}
-                            >
-                                <div className="absolute inset-0 flex items-center justify-between px-3 pointer-events-none">
-                                    <span className="text-[8px] text-stone-500 dark:text-stone-400">
-                                        {t("expense")}
-                                    </span>
-                                    <span className="text-[8px] text-stone-500 dark:text-stone-400">
-                                        {t("income")}
-                                    </span>
-                                </div>
-                                <Switch.Thumb className="w-1/2 h-full flex justify-center items-center transition-all rounded-md bg-semantic-expense text-white -translate-x-[22px] data-[state=checked]:bg-semantic-income data-[state=checked]:translate-x-[21px]">
-                                    <span className="text-[8px]">
-                                        {billState.type === "expense"
-                                            ? t("expense")
-                                            : t("income")}
-                                    </span>
-                                </Switch.Thumb>
-                            </Switch.Root>
+                            <div className="w-[136px] h-12 relative bg-stone-200 dark:bg-stone-900 rounded-lg p-1 flex items-center gap-1">
+                                {(
+                                    [
+                                        {
+                                            key: "expense",
+                                            label: t("expense"),
+                                            bg: "bg-semantic-expense",
+                                        },
+                                        {
+                                            key: "income",
+                                            label: t("income"),
+                                            bg: "bg-semantic-income",
+                                        },
+                                        {
+                                            key: "reminder",
+                                            label:
+                                                t("reminder") ?? "提醒",
+                                            bg: "bg-amber-500",
+                                        },
+                                    ] as const
+                                ).map((item) => {
+                                    const active = mode === item.key;
+                                    return (
+                                        <button
+                                            type="button"
+                                            key={item.key}
+                                            onClick={() =>
+                                                setMode(item.key as EditorMode)
+                                            }
+                                            className={cn(
+                                                "flex-1 h-full flex items-center justify-center rounded-md text-[9px] transition-all",
+                                                active
+                                                    ? `${item.bg} text-white font-medium`
+                                                    : "text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800",
+                                            )}
+                                        >
+                                            {item.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
                         <div className="flex-1 flex bg-stone-200 dark:bg-stone-400 focus:outline rounded-lg ml-2 px-2 relative">
                             {quickCurrencies.length > 0 && (
@@ -376,6 +505,25 @@ export default function EditorForm({
                     </div>
                 }
             >
+                {mode === "reminder" ? (
+                    <ReminderModeBody
+                        t={t}
+                        title={reminderTitle}
+                        setTitle={setReminderTitle}
+                        time={reminderTime}
+                        setTime={setReminderTime}
+                        targets={reminderTargets}
+                        toggleTarget={toggleReminderTarget}
+                        comment={reminderComment}
+                        setComment={setReminderComment}
+                        priority={reminderPriority}
+                        setPriority={setReminderPriority}
+                        currentUserId={currentUserId}
+                        creators={creators}
+                        onConfirm={toConfirm}
+                    />
+                ) : (
+                    <>
                 {/* categories */}
                 <div className="flex-1 flex-shrink-0 overflow-y-auto min-h-[80px] scrollbar-hidden flex flex-col px-2 text-sm font-medium gap-2">
                     <div className="flex flex-col min-h-[80px] grow-[2] shrink overflow-y-auto scrollbar-hidden w-full">
@@ -627,7 +775,198 @@ export default function EditorForm({
                         }}
                     />
                 </div>
+                </>
+                )}
             </PopupLayout>
         </Calculator.Root>
+    );
+}
+
+function ReminderModeBody({
+    t,
+    title,
+    setTitle,
+    time,
+    setTime,
+    targets,
+    toggleTarget,
+    comment,
+    setComment,
+    priority,
+    setPriority,
+    currentUserId,
+    creators,
+    onConfirm,
+}: {
+    t: (key: string, p?: Record<string, any>) => string;
+    title: string;
+    setTitle: (v: string) => void;
+    time: number;
+    setTime: (v: number) => void;
+    targets: (number | string)[];
+    toggleTarget: (id: number | string) => void;
+    comment: string;
+    setComment: (v: string) => void;
+    priority: "important" | "normal";
+    setPriority: (v: "important" | "normal") => void;
+    currentUserId: number | string;
+    creators: { id: number | string; name: string }[];
+    onConfirm: () => void;
+}) {
+    const isSelected = (id: number | string) =>
+        targets.some((p) => String(p) === String(id));
+    const selfIncluded = creators.some(
+        (c) => String(c.id) === String(currentUserId),
+    );
+    const formatDT = (ts: number) => {
+        const d = new Date(ts);
+        const pad = (n: number) => `${n}`.padStart(2, "0");
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+
+    return (
+        <div className="flex-1 overflow-y-auto flex flex-col gap-3 px-3 pb-4">
+            <div className="flex flex-col gap-1.5">
+                <div className="text-sm font-medium">
+                    {t("reminder-title") ?? "提醒標題"}
+                </div>
+                <Input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder={
+                        t("reminder-title-placeholder") ?? "例如：美髮"
+                    }
+                    autoFocus
+                />
+            </div>
+            <div className="flex flex-col gap-1.5">
+                <div className="text-sm font-medium">
+                    {t("reminder-priority") ?? "重要性"}
+                </div>
+                <div className="flex gap-1.5">
+                    {(
+                        [
+                            {
+                                key: "important",
+                                label: t("reminder-priority-important") ?? "重要",
+                                icon: "icon-[mdi--alert-circle]",
+                                color: "text-rose-500",
+                                active:
+                                    "bg-rose-500 text-white border-rose-500",
+                            },
+                            {
+                                key: "normal",
+                                label: t("reminder-priority-normal") ?? "一般",
+                                icon: "icon-[mdi--calendar-clock-outline]",
+                                color: "text-amber-500",
+                                active:
+                                    "bg-amber-500 text-white border-amber-500",
+                            },
+                        ] as const
+                    ).map((p) => (
+                        <button
+                            key={p.key}
+                            type="button"
+                            onClick={() => setPriority(p.key)}
+                            className={cn(
+                                "flex-1 flex items-center justify-center gap-1 text-sm px-3 py-2 rounded-md border transition-colors",
+                                priority === p.key
+                                    ? p.active
+                                    : "bg-muted text-muted-foreground border-transparent",
+                            )}
+                        >
+                            <i
+                                className={cn(
+                                    "size-4",
+                                    p.icon,
+                                    priority === p.key
+                                        ? ""
+                                        : p.color,
+                                )}
+                            />
+                            {p.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+                <div className="text-sm font-medium">
+                    {t("reminder-time") ?? "提醒時間"}
+                </div>
+                <div className="border rounded-md px-3 py-2 flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                        {formatDT(time)}
+                    </span>
+                    <DatePicker value={time} fixedTime onChange={setTime}>
+                        <Button variant="outline" size="sm" type="button">
+                            <i className="icon-[mdi--calendar-edit] size-4" />
+                        </Button>
+                    </DatePicker>
+                </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+                <div className="text-sm font-medium">
+                    {t("reminder-targets") ?? "提醒人"}
+                </div>
+                <div className="flex gap-1.5 flex-wrap">
+                    {!selfIncluded && (
+                        <button
+                            type="button"
+                            onClick={() => toggleTarget(currentUserId)}
+                            className={cn(
+                                "text-xs px-3 py-1 rounded-full border transition-colors",
+                                isSelected(currentUserId)
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-muted text-muted-foreground border-transparent",
+                            )}
+                        >
+                            {t("me") ?? "我"}
+                        </button>
+                    )}
+                    {creators.map((c) => (
+                        <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => toggleTarget(c.id)}
+                            className={cn(
+                                "text-xs px-3 py-1 rounded-full border transition-colors",
+                                isSelected(c.id)
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-muted text-muted-foreground border-transparent",
+                            )}
+                        >
+                            {String(c.id) === String(currentUserId)
+                                ? (t("me") ?? "我")
+                                : c.name}
+                        </button>
+                    ))}
+                </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+                <div className="text-sm font-medium">{t("comment")}</div>
+                <Input
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder={
+                        t("reminder-comment-placeholder") ??
+                        "跟 eva 約西門捷運站出口"
+                    }
+                />
+            </div>
+            <div className="flex-1" />
+            <button
+                type="button"
+                onClick={onConfirm}
+                disabled={!title.trim()}
+                className={cn(
+                    "h-12 rounded-xl font-bold text-white transition-all active:scale-[0.98] shadow-md",
+                    title.trim()
+                        ? "bg-amber-500 hover:bg-amber-400 shadow-amber-500/20 cursor-pointer"
+                        : "bg-amber-500/40 cursor-not-allowed",
+                )}
+            >
+                {t("confirm") ?? "確定"}
+            </button>
+        </div>
     );
 }

@@ -15,6 +15,7 @@ import {
     ScheduledEditProvider,
     ScheduledProvider,
 } from "@/components/scheduled";
+import { ReminderEditProvider } from "@/components/reminder";
 import { Settings } from "@/components/settings";
 import { SortableListProvider } from "@/components/sortable";
 import { SortableListWithEnableProvider } from "@/components/sortable/enable";
@@ -27,6 +28,7 @@ import {
     useQuickEntryByRelayr,
     useQuickGoAdd,
 } from "@/hooks/use-quick-entry";
+import { useReminderNotifier } from "@/hooks/use-reminder-notifier";
 import { useScheduled } from "@/hooks/use-scheduled";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { useUrlHandler } from "@/hooks/use-url-handler";
@@ -52,9 +54,8 @@ export default function MainLayout() {
     applyScheduledRef.current = applyScheduled;
     useEffect(() => {
         applyScheduledRef.current();
-    }, []);
-
-    useInitPreset();
+    }, []);    useInitPreset();
+    useReminderNotifier();
 
     return (
         <ThemeProvider>
@@ -74,9 +75,9 @@ export default function MainLayout() {
                 <BookConfirmProvider />
                 <BudgetProvider />
                 <BudgetEditProvider />
-                <BudgetDetailProvider />
-                <ScheduledProvider />
+                <BudgetDetailProvider />                <ScheduledProvider />
                 <ScheduledEditProvider />
+                <ReminderEditProvider />
                 <TagListProvider />
                 <CategoryListProvider />
                 <ModalProvider />

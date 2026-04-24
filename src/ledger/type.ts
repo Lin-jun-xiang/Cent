@@ -9,6 +9,7 @@ import type {
     Budget,
     CustomCurrency,
     PersonalMeta,
+    Reminder,
     Scheduled,
 } from "./extra-type";
 
@@ -19,6 +20,7 @@ export type {
     Budget,
     BillTagGroup,
     Scheduled,
+    Reminder,
 };
 
 /** 账单类型，代表收入或者支出 */
@@ -126,9 +128,10 @@ export type GlobalMeta = {
     map?: {
         amapKey?: string;
         amapSecurityCode?: string;
-    };
-    // Widget列表
+    };    // Widget列表
     widgets?: Widget[];
+    // 行事曆提醒列表
+    reminders?: Reminder[];
 };
 
 // 这是最终导出的核心JSON数据结构，使用这个数据结构可以直接被解析成可以识别的数据

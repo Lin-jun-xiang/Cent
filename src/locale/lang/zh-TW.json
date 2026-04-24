@@ -726,5 +726,22 @@
   "add-widget-module": "新增Widget模組",
   "thought": "思考過程",
   "untitled-chat": "新對話",
-  "no-chats": "暫無對話"
+  "no-chats": "暫無對話",
+  "reminder-edit": "編輯提醒",
+  "reminder-add": "新增提醒",
+  "reminder-title": "提醒標題",
+  "reminder-title-placeholder": "例如：美髮",
+  "reminder-comment-placeholder": "跟 eva 約西門捷運站出口",
+  "reminder-time": "提醒時間",
+  "reminder-targets": "提醒人",
+  "reminder-priority": "重要性",
+  "reminder-priority-important": "重要",
+  "reminder-priority-normal": "一般",
+  "reminder-today": "今日提醒",
+  "reminder-tomorrow": "明日提醒",
+  "reminder": "提醒",
+  "reminders": "提醒",
+  "no-reminders-today": "今日暫無提醒",
+  "transactions": "交易記錄",
+  "item": "筆"
 }

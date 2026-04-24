@@ -126,3 +126,25 @@ export type CustomCurrency = {
     symbol: string;
     rateToBase: number;
 };
+
+/**
+ * 行事曆提醒
+ *
+ * 會在提醒當天或前一天打開APP時提示 (一天一次，且只會提示被選為 targets 的使用者)
+ */
+export type Reminder = {
+    id: string;
+    /** 提醒標題 */
+    title: string;
+    /** 提醒時間戳 (含日期 + 提醒時分) */
+    time: number;
+    /** 被提醒的使用者 ID 列表 */
+    targets: (number | string)[];
+    /** 創建者 */
+    creatorId?: number | string;    /** 額外備註 */
+    comment?: string;
+    /** 是否已完成（完成後不再提醒） */
+    done?: boolean;
+    /** 重要性：important=重要 / normal=一般；未設定視為 normal */
+    priority?: "important" | "normal";
+};

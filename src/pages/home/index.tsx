@@ -20,6 +20,7 @@ import Ledger from "@/components/ledger";
 import BillItem from "@/components/ledger/item";
 import Loading from "@/components/loading";
 import Money from "@/components/money";
+import { showReminderEdit } from "@/components/reminder";
 import { CalendarModule } from "@/components/stat/calendar-module";
 import {
     Popover,
@@ -29,6 +30,7 @@ import {
 import WidgetPreview from "@/components/widget/preview";
 import { useBudget } from "@/hooks/use-budget";
 import { useCreators } from "@/hooks/use-creator";
+import { useReminders } from "@/hooks/use-reminders";
 import { useSnap } from "@/hooks/use-snap";
 import { useWidget } from "@/hooks/use-widget";
 import { amountToNumber } from "@/ledger/bill";
@@ -208,6 +210,72 @@ export default function Page() {
         return [start, end];
     }, [bills]);
 
+    // --- Reminder quick add ---
+    const { reminders, add: addReminder, update: updateReminder, remove: removeReminder } =
+        useReminders();
+    const goAddReminder = useCallback(async () => {
+        try {
+            const d = new Date(currentDate.valueOf());
+            d.setHours(12, 0, 0, 0);
+            const reminder = await showReminderEdit({
+                title: "",
+                time: d.getTime(),
+                // 空 targets 讓表單使用預設（全部）
+                targets: [],
+            } as any);
+            if (reminder) {
+                await addReminder(reminder as any);
+            }
+        } catch {
+            /* cancelled */
+        }
+    }, [currentDate, addReminder]);
+
+    // --- 當前日期 + 當前用戶相關的提醒 ---
+    // 1. 僅顯示當前使用者被指定為 target 的提醒（非提醒者看不到）
+    // 2. 若使用者有啟用建立者過濾，提醒的 creatorId 必須在已選中建立者內
+    const currentDateReminders = useMemo(() => {
+        return reminders
+            .filter((r) => dayjs(r.time).isSame(currentDate, "day"))
+            .filter((r) =>
+                r.targets?.some((id) => String(id) === String(userId)),
+            )
+            .filter((r) => {
+                if (isAllCreatorsSelected) return true;
+                if (r.creatorId === undefined) return false;
+                return selectedCreatorIds.has(String(r.creatorId));
+            })
+            .sort((a, b) => {
+                // 重要性排序：important 優先，然後按時間
+                const pa = a.priority === "important" ? 0 : 1;
+                const pb = b.priority === "important" ? 0 : 1;
+                if (pa !== pb) return pa - pb;
+                return a.time - b.time;
+            });
+    }, [
+        reminders,
+        currentDate,
+        userId,
+        isAllCreatorsSelected,
+        selectedCreatorIds,
+    ]);
+
+    const editReminder = useCallback(
+        async (id: string) => {
+            const r = reminders.find((x) => x.id === id);
+            if (!r) return;
+            try {
+                const result = (await showReminderEdit(r as any)) as any;
+                if (result) {
+                    await updateReminder(id, result);
+                }
+            } catch {
+                /* cancelled */
+            }
+        },
+        [reminders, updateReminder],
+    );
+
     return (
         <div className="w-full h-full p-2 flex flex-col overflow-hidden page-show">
             <div className="flex flex-wrap flex-col w-full gap-2">
@@ -312,6 +380,7 @@ export default function Page() {
                             <CalendarModule
                                 bills={creatorFilteredBills}
                                 range={calendarRange}
+                                selectedCreatorIds={selectedCreatorIds}
                                 onDateClick={(date) => {
                                     setCurrentDate(date);
                                     setCalendarOpen(false);
@@ -464,8 +533,131 @@ export default function Page() {
             >
                 <div className="w-full h-full overflow-y-auto flex flex-col">
                     {" "}
+                    {/* ── Reminders section (on top) ── */}
+                    {!expandedView && (
+                        <div className="pt-2 pb-2 flex flex-col gap-2 flex-shrink-0">
+                            <div className="flex items-center justify-between px-2">
+                                <h3 className="font-semibold text-base flex items-center gap-1.5">
+                                    <i className="icon-[mdi--bell-outline] size-4 text-amber-500" />
+                                    {t("reminders") ?? "提醒"}
+                                </h3>
+                                <button
+                                    type="button"
+                                    onClick={goAddReminder}
+                                    className="text-xs text-muted-foreground flex items-center gap-0.5 px-2 py-1 rounded-full hover:bg-muted transition-colors cursor-pointer"
+                                >
+                                    <i className="icon-[mdi--plus] size-4" />
+                                    {t("reminder-add") ?? "新增提醒"}
+                                </button>
+                            </div>
+                            {currentDateReminders.length > 0 ? (
+                                <div className="flex flex-col divide-y">
+                                    {currentDateReminders.map((r) => {
+                                        const done = !!r.done;
+                                        const creator = creators.find(
+                                            (c) =>
+                                                String(c.id) ===
+                                                String(r.creatorId),
+                                        );
+                                        const isMine =
+                                            String(r.creatorId) ===
+                                            String(userId);
+                                        const creatorName = isMine
+                                            ? (t("me") ?? "我")
+                                            : (creator?.name ??
+                                              "unknown-user");
+                                        return (
+                                            // biome-ignore lint/a11y/useKeyWithClickEvents: reminder item
+                                            // biome-ignore lint/a11y/noStaticElementInteractions: reminder item
+                                            <div
+                                                key={r.id}
+                                                className={cn(
+                                                    "flex items-center px-4 py-4 cursor-pointer hover:bg-muted/60 transition-colors",
+                                                    done && "opacity-50",
+                                                )}
+                                                onClick={() =>
+                                                    editReminder(r.id)
+                                                }
+                                            >
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        updateReminder(r.id, {
+                                                            ...r,
+                                                            done: !r.done,
+                                                        } as any);
+                                                    }}
+                                                    className="rounded-full w-10 h-10 flex-shrink-0 flex items-center justify-center"
+                                                >
+                                                    <i
+                                                        className={cn(
+                                                            "size-6",
+                                                            done
+                                                                ? "icon-[mdi--check-circle] text-emerald-500"
+                                                                : r.priority ===
+                                                                    "important"
+                                                                  ? "icon-[mdi--alert-circle] text-rose-500"
+                                                                  : "icon-[mdi--calendar-clock-outline] text-amber-500",
+                                                        )}
+                                                    />
+                                                </button>
+                                                <div className="flex-1 min-w-0 flex flex-col px-4 overflow-hidden">
+                                                    <div
+                                                        className={cn(
+                                                            "text-md font-semibold truncate h-6 flex items-center",
+                                                            done &&
+                                                                "line-through",
+                                                        )}
+                                                    >
+                                                        {r.title}
+                                                    </div>
+                                                    <div className="flex text-xs">
+                                                        <div>
+                                                            {creatorName}
+                                                        </div>
+                                                        {r.comment && (
+                                                            <>
+                                                                <div className="px-1">
+                                                                    |
+                                                                </div>
+                                                                <div className="truncate">
+                                                                    {r.comment}
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="text-xs text-muted-foreground flex-shrink-0">
+                                                    {dayjs(r.time).format(
+                                                        "HH:mm",
+                                                    )}
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        removeReminder(r.id);
+                                                    }}
+                                                    className="p-1 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                                                >
+                                                    <i className="icon-[mdi--trash-can-outline] size-4" />
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="mx-2 text-xs text-center text-muted-foreground/60 py-3 border rounded-md border-dashed">
+                                    {t("no-reminders-today") ??
+                                        "今日暫無提醒"}
+                                </div>
+                            )}
+                        </div>
+                    )}
                     <div className="px-2 pt-2 pb-1 flex items-center justify-between flex-shrink-0">
-                        <h3 className="font-semibold text-base">
+                        <h3 className="font-semibold text-base flex items-center gap-1.5">
+                            <i className="icon-[mdi--receipt-text-outline] size-4 text-primary/80" />
                             {t("transactions") ?? "交易記錄"}
                         </h3>
                         {!expandedView && (
@@ -503,6 +695,11 @@ export default function Page() {
                                     showTime
                                     showAssets={showAssets}
                                     onClick={() => showBillInfo(bill)}
+                                    onDelete={() =>
+                                        useLedgerStore
+                                            .getState()
+                                            .removeBill(bill.id)
+                                    }
                                 />
                             ))}
                         </div>

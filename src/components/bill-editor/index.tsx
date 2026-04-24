@@ -1,5 +1,6 @@
 import { useLedgerStore } from "@/store/ledger";
 import createConfirmProvider from "../confirm";
+import { isCancelError } from "../confirm/state";
 import EditorForm from "./form";
 
 const confirms = createConfirmProvider(EditorForm, {
@@ -13,6 +14,13 @@ const [BillEditorProvider, showBillEditor] = confirms;
 export { BillEditorProvider, showBillEditor };
 
 export const goAddBill = async () => {
-    const newBill = await showBillEditor();
-    await useLedgerStore.getState().addBill(newBill);
+    try {
+        const newBill = await showBillEditor();
+        // 提醒模式下不會走到這裡（內部已自行保存並取消關閉）
+        if (newBill) {
+            await useLedgerStore.getState().addBill(newBill);
+        }
+    } catch (err) {
+        if (!isCancelError(err)) throw err;
+    }
 };

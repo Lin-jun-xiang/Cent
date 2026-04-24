@@ -1,11 +1,15 @@
 import dayjs from "dayjs";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useLongPress } from "@/hooks/use-long-press";
+import { useReminders } from "@/hooks/use-reminders";
 import { amountToNumber } from "@/ledger/bill";
-import type { Bill } from "@/ledger/type";
+import type { Bill, Reminder } from "@/ledger/type";
 import { useIntl } from "@/locale";
+import { useUserStore } from "@/store/user";
 import { cn } from "@/utils";
 import { toThousand } from "@/utils/number";
 import { Button } from "../ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 /**
  * 日历模块 — 在图表分析页面以月曆形式展示每日收支
@@ -14,10 +18,13 @@ export function CalendarModule({
     bills,
     range,
     onDateClick,
+    selectedCreatorIds,
 }: {
     bills: Bill[];
     range: [number, number];
     onDateClick?: (date: dayjs.Dayjs) => void;
+    /** 若提供且非空，只顯示 creatorId 在此集合內的提醒；未提供或空集合代表全部 */
+    selectedCreatorIds?: Set<string>;
 }) {
     const t = useIntl();
 
@@ -44,6 +51,42 @@ export function CalendarModule({
         }
         return map;
     }, [bills]);
+
+    // --- 按日聚合提醒 ---
+    // 僅顯示當前使用者被指定為 target 的提醒（非提醒者看不到）
+    // 若 selectedCreatorIds 有指定，額外過濾 creatorId 是否在篩選範圍內
+    const { reminders } = useReminders();
+    const { id: userId } = useUserStore();
+    const remindersByDate = useMemo(() => {
+        const map = new Map<string, typeof reminders>();
+        const hasCreatorFilter =
+            selectedCreatorIds && selectedCreatorIds.size > 0;
+        for (const r of reminders) {
+            if (r.done) continue;
+            if (
+                !r.targets?.some((id) => String(id) === String(userId))
+            )
+                continue;
+            if (hasCreatorFilter) {
+                if (r.creatorId === undefined) continue;
+                if (!selectedCreatorIds.has(String(r.creatorId))) continue;
+            }
+            const key = dayjs(r.time).format("YYYY-MM-DD");
+            const list = map.get(key) ?? [];
+            list.push(r);
+            map.set(key, list);
+        }
+        // 依重要性 + 時間排序
+        for (const list of map.values()) {
+            list.sort((a, b) => {
+                const pa = a.priority === "important" ? 0 : 1;
+                const pb = b.priority === "important" ? 0 : 1;
+                if (pa !== pb) return pa - pb;
+                return a.time - b.time;
+            });
+        }
+        return map;
+    }, [reminders, userId, selectedCreatorIds]);
 
     // --- 月份日曆格子 ---
     const calendarDays = useMemo(() => {
@@ -299,54 +342,173 @@ export function CalendarModule({
                             const net = data
                                 ? data.income - data.expense
                                 : undefined;
+                            const dayReminders =
+                                remindersByDate.get(dateKey) ?? [];
 
                             return (
-                                // biome-ignore lint/a11y/noStaticElementInteractions: calendar day cell
-                                // biome-ignore lint/a11y/useKeyWithClickEvents: calendar day cell
-                                <div
+                                <DayCell
                                     key={dateKey}
-                                    onClick={() =>
-                                        isCurrentMonth && onDateClick?.(day)
-                                    }
-                                    className={cn(
-                                        "flex flex-col items-center py-1 min-h-[52px] rounded-md text-center transition-colors",
-                                        !isCurrentMonth && "opacity-30",
-                                        isToday &&
-                                            "bg-accent ring-1 ring-accent-foreground/20",
-                                        isCurrentMonth &&
-                                            onDateClick &&
-                                            "cursor-pointer hover:bg-muted",
-                                    )}
-                                >
-                                    <span
-                                        className={cn(
-                                            "text-[12px] font-medium leading-none",
-                                            isToday &&
-                                                "text-accent-foreground font-bold",
-                                        )}
-                                    >
-                                        {day.date()}
-                                    </span>
-                                    {data && isCurrentMonth && (
-                                        <div className="flex flex-col items-center mt-0.5 gap-px">
-                                            {data.expense > 0 && (
-                                                <span className="text-[8px] leading-tight text-semantic-expense">
-                                                    -{fmt(data.expense)}
-                                                </span>
-                                            )}
-                                            {data.income > 0 && (
-                                                <span className="text-[8px] leading-tight text-semantic-income">
-                                                    +{fmt(data.income)}
-                                                </span>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
+                                    day={day}
+                                    isCurrentMonth={isCurrentMonth}
+                                    isToday={isToday}
+                                    data={data}
+                                    fmt={fmt}
+                                    reminders={dayReminders}
+                                    onDateClick={onDateClick}
+                                />
                             );
                         })}
                     </div>
                 ))}
             </div>
         </div>
+    );
+}
+
+function DayCell({
+    day,
+    isCurrentMonth,
+    isToday,
+    data,
+    fmt,
+    reminders,
+    onDateClick,
+}: {
+    day: dayjs.Dayjs;
+    isCurrentMonth: boolean;
+    isToday: boolean;
+    data?: { income: number; expense: number };
+    fmt: (v: number) => string;
+    reminders: Reminder[];
+    onDateClick?: (date: dayjs.Dayjs) => void;
+}) {
+    const [open, setOpen] = useState(false);
+    const hasReminder = reminders.length > 0 && isCurrentMonth;
+
+    const longPressBind = useLongPress({
+        disabled: !hasReminder,
+        onClick: () => {
+            if (isCurrentMonth) onDateClick?.(day);
+        },
+        onLongPressStart: () => setOpen(true),
+    });
+
+    const cellClass = cn(
+        "flex flex-col items-center py-1 min-h-[52px] rounded-md text-center transition-colors select-none",
+        !isCurrentMonth && "opacity-30",
+        isToday && "bg-accent ring-1 ring-accent-foreground/20",
+        isCurrentMonth && onDateClick && "cursor-pointer hover:bg-muted",
+    );
+
+    const content = (
+        <>
+            <span
+                className={cn(
+                    "text-[12px] font-medium leading-none",
+                    isToday && "text-accent-foreground font-bold",
+                )}
+            >
+                {day.date()}
+            </span>
+            {hasReminder && (
+                <span
+                    className={cn(
+                        "mt-0.5 inline-flex items-center gap-0.5 text-[8px] leading-none",
+                        reminders.some((r) => r.priority === "important")
+                            ? "text-rose-600 dark:text-rose-400"
+                            : "text-amber-600 dark:text-amber-400",
+                    )}
+                >
+                    <i
+                        className={cn(
+                            "size-[9px]",
+                            reminders.some((r) => r.priority === "important")
+                                ? "icon-[mdi--alert-circle]"
+                                : "icon-[mdi--bell]",
+                        )}
+                    />
+                    {reminders.length > 1 ? reminders.length : ""}
+                </span>
+            )}
+            {data && isCurrentMonth && (
+                <div className="flex flex-col items-center mt-0.5 gap-px">
+                    {data.expense > 0 && (
+                        <span className="text-[8px] leading-tight text-semantic-expense">
+                            -{fmt(data.expense)}
+                        </span>
+                    )}
+                    {data.income > 0 && (
+                        <span className="text-[8px] leading-tight text-semantic-income">
+                            +{fmt(data.income)}
+                        </span>
+                    )}
+                </div>
+            )}
+        </>
+    );
+
+    if (!hasReminder) {
+        return (
+            // biome-ignore lint/a11y/noStaticElementInteractions: calendar day cell
+            // biome-ignore lint/a11y/useKeyWithClickEvents: calendar day cell
+            <div
+                className={cellClass}
+                onClick={() => isCurrentMonth && onDateClick?.(day)}
+            >
+                {content}
+            </div>
+        );
+    }
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                {/* biome-ignore lint/a11y/noStaticElementInteractions: calendar day cell */}
+                {/* biome-ignore lint/a11y/useKeyWithClickEvents: calendar day cell */}
+                <div
+                    className={cellClass}
+                    onMouseEnter={() => setOpen(true)}
+                    onMouseLeave={() => setOpen(false)}
+                    {...(longPressBind ? longPressBind() : {})}
+                >
+                    {content}
+                </div>
+            </PopoverTrigger>
+            <PopoverContent
+                side="top"
+                align="center"
+                className="w-auto max-w-[240px] p-2 text-xs"
+                onOpenAutoFocus={(e) => e.preventDefault()}
+            >
+                <div className="flex flex-col gap-1">
+                    <div className="text-[11px] text-muted-foreground font-medium">
+                        {day.format("YYYY-MM-DD")}
+                    </div>
+                    {reminders.map((r) => (
+                        <div
+                            key={r.id}
+                            className="flex items-start gap-1.5 leading-tight"
+                        >
+                            <i
+                                className={cn(
+                                    "size-3 mt-0.5 flex-shrink-0",
+                                    r.priority === "important"
+                                        ? "icon-[mdi--alert-circle] text-rose-500"
+                                        : "icon-[mdi--bell] text-amber-500",
+                                )}
+                            />
+                            <div className="flex flex-col min-w-0">
+                                <span className="font-medium truncate">
+                                    {r.title}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground">
+                                    {dayjs(r.time).format("HH:mm")}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </PopoverContent>
+        </Popover>
     );
 }
