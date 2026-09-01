@@ -716,7 +716,7 @@ export default function Page() {
                                 <div
                                     key={`reminders-${daySwitch.seq}`}
                                     className={cn(
-                                        "mx-1 surface flex flex-col divide-y divide-border overflow-hidden",
+                                        "mx-1 shrink-0 surface flex flex-col divide-y divide-border overflow-hidden",
                                         dayAnimClass,
                                     )}
                                 >
@@ -816,7 +816,7 @@ export default function Page() {
                                 <div
                                     key={`reminders-empty-${daySwitch.seq}`}
                                     className={cn(
-                                        "mx-1 text-[11px] text-center text-muted-foreground/70 py-3 border border-dashed border-border rounded-[var(--radius)]",
+                                        "mx-1 shrink-0 text-[11px] text-center text-muted-foreground/70 py-3 border border-dashed border-border rounded-[var(--radius)]",
                                         dayAnimClass,
                                     )}
                                 >
@@ -860,7 +860,7 @@ export default function Page() {
                         <div
                             key={`bills-${daySwitch.seq}`}
                             className={cn(
-                                "mx-1 mb-24 surface flex flex-col divide-y divide-border overflow-hidden",
+                                "mx-1 mb-24 shrink-0 surface flex flex-col divide-y divide-border overflow-hidden",
                                 dayAnimClass,
                             )}
                         >
@@ -883,7 +883,7 @@ export default function Page() {
                         <div
                             key={`bills-empty-${daySwitch.seq}`}
                             className={cn(
-                                "mx-1 flex flex-col items-center gap-2 py-10 text-sm text-center text-muted-foreground/70",
+                                "mx-1 shrink-0 flex flex-col items-center gap-2 py-10 text-sm text-center text-muted-foreground/70",
                                 dayAnimClass,
                             )}
                         >
