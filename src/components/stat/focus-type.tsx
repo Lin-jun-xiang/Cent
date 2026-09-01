@@ -24,7 +24,7 @@ export function FocusTypeSelector({
                 className={cn(
                     btnClass,
                     focusType === "income" &&
-                        "!bg-stone-700 !text-white [&_span]:text-semantic-income-medium",
+                        "!bg-primary !text-primary-foreground [&_span]:text-primary-foreground/80",
                 )}
                 onClick={() => {
                     setFocusType("income");
@@ -42,7 +42,7 @@ export function FocusTypeSelector({
                 className={cn(
                     btnClass,
                     focusType === "expense" &&
-                        "!bg-stone-700 !text-white [&_span]:text-semantic-expense-medium",
+                        "!bg-primary !text-primary-foreground [&_span]:text-primary-foreground/80",
                 )}
                 onClick={() => setFocusType("expense")}
             >
@@ -57,7 +57,8 @@ export function FocusTypeSelector({
                 type="button"
                 className={cn(
                     btnClass,
-                    focusType === "balance" && "!bg-stone-700 !text-white",
+                    focusType === "balance" &&
+                        "!bg-primary !text-primary-foreground",
                 )}
                 onClick={() => setFocusType("balance")}
             >

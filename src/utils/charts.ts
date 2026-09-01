@@ -422,44 +422,79 @@ export function processBillDataForCharts(
     };
 }
 
+/**
+ * 圖表用的主題色，改為在建立 option 時從 CSS 變數讀取，
+ * 深色模式才不會出現寫死的白底 tooltip 與看不見的軸線
+ */
+const chartTheme = () => {
+    // 這幾個變數刻意維持 hex：ECharts 會把顏色交給 canvas 與 zrender 處理
+    const label = getCSSVariable("--chart-axis-label") || "#98a3ac";
+    const line = getCSSVariable("--chart-grid-line") || "#e9edf0";
+    const surface = getCSSVariable("--chart-surface") || "#ffffff";
+    const text = getCSSVariable("--chart-text") || "#2b3439";
+    return {
+        label,
+        line,
+        surface,
+        text,
+        axisLabel: { fontSize: 10, color: label },
+        axisLine: { show: false } as const,
+        axisTick: { show: false } as const,
+        splitLine: {
+            show: true,
+            lineStyle: { type: "dashed", color: line },
+        } as const,
+        tooltip: {
+            backgroundColor: surface,
+            borderColor: line,
+            borderWidth: 1,
+            padding: [8, 10] as [number, number],
+            textStyle: { color: text, fontSize: 12 },
+            extraCssText:
+                "box-shadow: var(--shadow-raised); border-radius: 10px;",
+        },
+        legend: {
+            itemWidth: 10,
+            itemHeight: 10,
+            icon: "roundRect",
+            textStyle: { color: label, fontSize: 11 },
+        },
+    };
+};
+
 export const overallTrendOption = (
     dataset: { source: any[] },
     options?: ECOption,
-) =>
-    merge(
+) => {
+    const theme = chartTheme();
+    return merge(
         {
             tooltip: {
                 trigger: "axis",
-                backgroundColor: "rgba(255,255,255,0.95)",
-                borderColor: "#eee",
-                borderWidth: 1,
-                textStyle: { color: "#333", fontSize: 12 },
+                ...theme.tooltip,
             },
-            legend: {},
+            legend: theme.legend,
             dataset: dataset,
             grid: {
-                left: "3%",
-                right: "4%",
-                bottom: "3%",
-                top: 60,
+                left: 4,
+                right: 12,
+                bottom: 4,
+                top: 56,
                 containLabel: true,
             },
             xAxis: {
                 type: "category",
                 boundaryGap: false,
-                axisLabel: { fontSize: 10, color: "#999" },
-                axisLine: { show: false },
-                axisTick: { show: false },
+                axisLabel: theme.axisLabel,
+                axisLine: theme.axisLine,
+                axisTick: theme.axisTick,
             },
             yAxis: {
                 type: "value",
-                splitLine: {
-                    show: true,
-                    lineStyle: { type: "dashed", color: "rgba(0,0,0,0.06)" },
-                },
-                axisLabel: { fontSize: 10, color: "#999" },
-                axisLine: { show: false },
-                axisTick: { show: false },
+                splitLine: theme.splitLine,
+                axisLabel: theme.axisLabel,
+                axisLine: theme.axisLine,
+                axisTick: theme.axisTick,
             },
             series: [
                 {
@@ -467,21 +502,21 @@ export const overallTrendOption = (
                     smooth: 0.4,
                     color: getCSSVariable("--color-income"),
                     showSymbol: false,
-                    lineStyle: { width: 2.5 },
-                    areaStyle: { opacity: 0.08 },
+                    lineStyle: { width: 2 },
+                    areaStyle: { opacity: 0.1 },
                 },
                 {
                     type: "line",
                     smooth: 0.4,
                     color: getCSSVariable("--color-expense"),
                     showSymbol: false,
-                    lineStyle: { width: 2.5 },
-                    areaStyle: { opacity: 0.08 },
+                    lineStyle: { width: 2 },
+                    areaStyle: { opacity: 0.1 },
                 },
                 {
                     type: "line",
                     smooth: 0.4,
-                    color: "#888",
+                    color: theme.label,
                     showSymbol: false,
                     lineStyle: { width: 1.5, type: "dashed" },
                 },
@@ -489,6 +524,7 @@ export const overallTrendOption = (
         },
         options,
     );
+};
 
 /**
  * 通用的趋势图 ECharts Option 生成器
@@ -502,46 +538,41 @@ export const userTrendOption = (
     options?: ECOption,
 ): ECOption => {
     const seriesCount = dataset.source[0].length - 1;
+    const theme = chartTheme();
     const baseOption: ECOption = {
         tooltip: {
             trigger: "axis",
-            backgroundColor: "rgba(255,255,255,0.95)",
-            borderColor: "#eee",
-            borderWidth: 1,
-            textStyle: { color: "#333", fontSize: 12 },
+            ...theme.tooltip,
         },
-        legend: {},
+        legend: theme.legend,
         dataset: dataset,
         grid: {
-            left: "3%",
-            right: "4%",
-            bottom: "3%",
-            top: 60,
+            left: 4,
+            right: 12,
+            bottom: 4,
+            top: 56,
             containLabel: true,
         },
         xAxis: {
             type: "category",
             boundaryGap: false,
-            axisLabel: { fontSize: 10, color: "#999" },
-            axisLine: { show: false },
-            axisTick: { show: false },
+            axisLabel: theme.axisLabel,
+            axisLine: theme.axisLine,
+            axisTick: theme.axisTick,
         },
         yAxis: {
             type: "value",
-            splitLine: {
-                show: true,
-                lineStyle: { type: "dashed", color: "rgba(0,0,0,0.06)" },
-            },
-            axisLabel: { fontSize: 10, color: "#999" },
-            axisLine: { show: false },
-            axisTick: { show: false },
+            splitLine: theme.splitLine,
+            axisLabel: theme.axisLabel,
+            axisLine: theme.axisLine,
+            axisTick: theme.axisTick,
         },
         series: Array.from({ length: seriesCount }, (_, i) => ({
             type: "line",
             smooth: 0.4,
             showSymbol: false,
-            lineStyle: { width: 2.5 },
-            areaStyle: { opacity: 0.06 },
+            lineStyle: { width: 2 },
+            areaStyle: { opacity: 0.08 },
             name: dataset.source[0][i + 1],
             encode: {
                 x: "date",
@@ -563,61 +594,66 @@ export const structureOption = (dataset: any[], options?: ECOption) => {
             color: categoryColors(item.id),
         },
     }));
+    const theme = chartTheme();
     return merge(
         {
             title: {
                 text: "支出结构",
                 left: "center",
-                textStyle: { fontSize: 16, fontWeight: 500 },
+                textStyle: {
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: theme.text,
+                },
             },
             tooltip: {
                 trigger: "item",
                 formatter: "{b}: {c} ({d}%)",
-                backgroundColor: "rgba(255,255,255,0.95)",
-                borderColor: "#eee",
-                borderWidth: 1,
-                textStyle: { color: "#333", fontSize: 12 },
+                ...theme.tooltip,
             },
             legend: {
                 orient: "vertical",
                 left: "left",
-                textStyle: { fontSize: 11, color: "#666" },
+                ...theme.legend,
             },
             series: [
                 {
                     name: "支出类型",
                     type: "pie",
-                    center: ["55%", "50%"],
-                    radius: ["35%", "60%"],
+                    center: ["55%", "52%"],
+                    radius: ["42%", "66%"],
                     itemStyle: {
-                        borderRadius: 6,
-                        borderColor: "#fff",
+                        borderRadius: 8,
+                        // 用卡片色描邊，深色模式下才不會出現白框
+                        borderColor: theme.surface,
                         borderWidth: 2,
                     },
                     label: {
                         fontSize: 11,
-                        color: "#666",
+                        color: theme.label,
                     },
                     labelLine: {
                         show: true,
-                        length: 12,
+                        length: 10,
                         length2: 8,
                         lineStyle: {
                             width: 1,
-                            color: "#ccc",
+                            color: theme.line,
                         },
                         smooth: 0.3,
                     },
                     data: coloredData,
                     emphasis: {
+                        scaleSize: 4,
                         itemStyle: {
                             shadowBlur: 12,
                             shadowOffsetX: 0,
-                            shadowColor: "rgba(0, 0, 0, 0.15)",
+                            shadowColor: "rgba(0, 0, 0, 0.18)",
                         },
                         label: {
-                            fontSize: 13,
+                            fontSize: 12,
                             fontWeight: "bold",
+                            color: theme.text,
                         },
                     },
                 },

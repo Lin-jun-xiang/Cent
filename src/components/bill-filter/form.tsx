@@ -563,7 +563,7 @@ export default function BillFilterForm({
                         onCheckedChange={(v) => {
                             setForm((prev) => ({ ...prev, scheduled: v }));
                         }}
-                        className="text-xs bg-transparent shadow-md"
+                        className="text-xs"
                     >
                         {t("by-scheduled")}
                     </Tag>
@@ -572,7 +572,7 @@ export default function BillFilterForm({
                         onCheckedChange={(v) => {
                             setForm((prev) => ({ ...prev, assets: v }));
                         }}
-                        className="text-xs bg-transparent shadow-md"
+                        className="text-xs"
                     >
                         {t("with-assets")}
                     </Tag>

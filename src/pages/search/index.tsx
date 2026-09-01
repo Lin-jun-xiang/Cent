@@ -236,8 +236,13 @@ export default function Page() {
     const [pickedTags, setPickedTags] = useState<string[]>([]);
     const [pickedType, setPickedType] = useState<BillType | undefined>();
 
+    /**
+     * 切換一個二次篩選條件；同時清掉已選取的帳單，
+     * 避免選取的項目被篩掉後仍被批次操作到
+     */
     const toggle = useCallback(
         (setter: typeof setPickedCategories, id: string) => {
+            setSelectedIds([]);
             setter((prev) =>
                 prev.includes(id)
                     ? prev.filter((v) => v !== id)
@@ -246,6 +251,10 @@ export default function Page() {
         },
         [],
     );
+    const togglePickedType = useCallback((type: BillType) => {
+        setSelectedIds([]);
+        setPickedType((prev) => (prev === type ? undefined : type));
+    }, []);
 
     /** 结果中出现过的分类，按数量倒序 */
     const categoryFacets = useMemo(() => {
@@ -337,11 +346,6 @@ export default function Page() {
             : selectedIds.length === visible.length
               ? true
               : "indeterminate";
-
-    // 二次筛选后已选中的账单可能被隐藏，避免误操作到看不见的记录
-    useEffect(() => {
-        setSelectedIds([]);
-    }, [pickedCategories, pickedTags, pickedType]);
 
     const toBatchDelete = async () => {
         await modal.prompt({
@@ -470,7 +474,7 @@ export default function Page() {
                             key={preset.label}
                             checked={activePreset === preset.label}
                             onCheckedChange={() => applyPreset(preset)}
-                            className="flex-shrink-0 text-xs bg-transparent shadow-md"
+                            className="flex-shrink-0 text-xs"
                         >
                             {t(preset.label)}
                         </Tag>
@@ -523,13 +527,9 @@ export default function Page() {
                                         key={type}
                                         checked={pickedType === type}
                                         onCheckedChange={() =>
-                                            setPickedType((prev) =>
-                                                prev === type
-                                                    ? undefined
-                                                    : type,
-                                            )
+                                            togglePickedType(type)
                                         }
-                                        className="flex-shrink-0 text-xs bg-transparent shadow-md"
+                                        className="flex-shrink-0 text-xs"
                                     >
                                         {t(type)} {count}
                                     </Tag>
@@ -552,7 +552,7 @@ export default function Page() {
                                                     facet.id,
                                                 )
                                             }
-                                            className="flex-shrink-0 text-xs bg-transparent shadow-md"
+                                            className="flex-shrink-0 text-xs"
                                         >
                                             {facet.name} {facet.count}
                                         </Tag>
@@ -573,7 +573,7 @@ export default function Page() {
                                             onCheckedChange={() =>
                                                 toggle(setPickedTags, facet.id)
                                             }
-                                            className="flex-shrink-0 text-xs bg-transparent shadow-md"
+                                            className="flex-shrink-0 text-xs"
                                         >
                                             {facet.name} {facet.count}
                                         </Tag>

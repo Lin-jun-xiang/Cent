@@ -413,7 +413,7 @@ function DayCell({
                     className={cn(
                         "mt-0.5 inline-flex items-center gap-0.5 text-[8px] leading-none",
                         reminders.some((r) => r.priority === "important")
-                            ? "text-rose-600 dark:text-rose-400"
+                            ? "text-semantic-expense-strong"
                             : "text-amber-600 dark:text-amber-400",
                     )}
                 >
@@ -491,7 +491,7 @@ function DayCell({
                                 className={cn(
                                     "size-3 mt-0.5 flex-shrink-0",
                                     r.priority === "important"
-                                        ? "icon-[mdi--alert-circle] text-rose-500"
+                                        ? "icon-[mdi--alert-circle] text-semantic-expense"
                                         : "icon-[mdi--bell] text-amber-500",
                                 )}
                             />

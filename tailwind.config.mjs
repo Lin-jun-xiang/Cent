@@ -15,9 +15,14 @@ module.exports = {
                     // change component usages without altering visual colors.
                     "expense-medium": "var(--color-expense-medium-legacy)",
                     "expense-muted": "var(--color-expense-400)",
+                    // soft: 卡片、標籤底色；strong: 深底上的文字色
+                    "expense-soft": "var(--color-expense-soft)",
+                    "expense-strong": "var(--color-expense-strong)",
                     income: "var(--color-income)",
                     "income-medium": "var(--color-income-medium-legacy)",
                     "income-muted": "var(--color-income-400)",
+                    "income-soft": "var(--color-income-soft)",
+                    "income-strong": "var(--color-income-strong)",
                 },
             },
             keyframes: {

@@ -9,7 +9,13 @@ dayjs.extend(isSameOrAfter);
 import { DefaultCurrencyId as DefaultBaseCurrencyId } from "@/api/currency/currencies";
 import { BillCategories } from "./category";
 import { tokenizeKeyword } from "./keyword";
-import type { Bill, BillCategory, BillFilter, BillType } from "./type";
+import type {
+    Bill,
+    BillCategory,
+    BillFilter,
+    BillKeyword,
+    BillType,
+} from "./type";
 
 const isTypeMatched = (bill: Bill, type?: BillType) => {
     if (type === undefined) return true;
@@ -82,7 +88,7 @@ const isCateMatched = (bill: Bill, cates?: string[]) => {
  * 只用分类记账（没写备注）的账单也能被分类名搜到
  */
 const isKeywordMatched = (bill: Bill, filter: BillFilter) => {
-    const keywords = filter.keywords?.length
+    const keywords: BillKeyword[] = filter.keywords?.length
         ? filter.keywords
         : // 调用方未解析分类、标签名称时，退化为只匹配备注
           tokenizeKeyword(filter.comment ?? "").map((text) => ({ text }));
