@@ -727,5 +727,8 @@
   "reminder-tomorrow": "Tomorrow's Reminder",
   "reminder": "Reminder",
   "reminders": "Reminders",
-  "no-reminders-today": "No reminders today"
+  "no-reminders-today": "No reminders today",
+  "search-placeholder": "Search notes, categories, tags",
+  "last-7-days": "Last 7 Days",
+  "last-30-days": "Last 30 Days"
 }

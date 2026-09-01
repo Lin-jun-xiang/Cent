@@ -34,6 +34,7 @@ import {
 import { TagItem } from "@/components/stat/static-item";
 import { Button } from "@/components/ui/button";
 import WidgetPreview from "@/components/widget/preview";
+import useCategory from "@/hooks/use-category";
 import { useCreators } from "@/hooks/use-creator";
 import { useCurrency } from "@/hooks/use-currency";
 import {
@@ -47,6 +48,7 @@ import type {
     BillFilterView,
     BillFilterViewModule,
 } from "@/ledger/extra-type";
+import { resolveFilterKeywords } from "@/ledger/keyword";
 import type { Bill } from "@/ledger/type";
 import { useIntl } from "@/locale";
 import { useBookStore } from "@/store/book";
@@ -144,6 +146,9 @@ export default function Page() {
 
     const [filtered, setFiltered] = useState<Bill[]>([]);
 
+    const { tags } = useTag();
+    const { categories } = useCategory();
+
     useEffect(() => {
         const book = useBookStore.getState().currentBookId;
         if (!book) {
@@ -152,14 +157,21 @@ export default function Page() {
         if (!selectedFilter) {
             return;
         }
-        StorageDeferredAPI.filter(book, {
-            ...selectedFilter,
-            start: realRange[0],
-            end: realRange[1],
-        }).then((result) => {
+        StorageDeferredAPI.filter(
+            book,
+            // 搜索文本需要在主线程解析，才能命中分类名与标签名
+            resolveFilterKeywords(
+                {
+                    ...selectedFilter,
+                    start: realRange[0],
+                    end: realRange[1],
+                },
+                { categories, tags },
+            ),
+        ).then((result) => {
             setFiltered(result);
         });
-    }, [selectedFilter, realRange[0], realRange[1]]);
+    }, [selectedFilter, realRange[0], realRange[1], categories, tags]);
 
     const [focusType, setFocusType] = useState<FocusType>("expense");
     const [dimension, setDimension] = useState<"category" | "user">("category");
@@ -194,7 +206,6 @@ export default function Page() {
         return selectedFilterView?.modules ?? DefaultModuleOrder;
     }, [selectedFilterView?.modules]);
 
-    const { tags } = useTag();
     const tagStructure = useMemo(
         () =>
             Array.from(dataSources.tagStructure.entries())

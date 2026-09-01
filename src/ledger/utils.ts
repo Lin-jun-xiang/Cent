@@ -8,6 +8,7 @@ dayjs.extend(isSameOrAfter);
 
 import { DefaultCurrencyId as DefaultBaseCurrencyId } from "@/api/currency/currencies";
 import { BillCategories } from "./category";
+import { tokenizeKeyword } from "./keyword";
 import type { Bill, BillCategory, BillFilter, BillType } from "./type";
 
 const isTypeMatched = (bill: Bill, type?: BillType) => {
@@ -73,8 +74,28 @@ const isCateMatched = (bill: Bill, cates?: string[]) => {
     return cates?.length ? cates.some((c) => bill.categoryId === c) : true;
 };
 
-const isCommentMatched = (bill: Bill, comment?: string) => {
-    return comment ? Boolean(bill.comment?.includes(comment)) : true;
+/**
+ * 关键词匹配：忽略大小写，多个关键词需全部命中（AND）
+ *
+ * 单个关键词命中备注、分类名或标签名任意一项即视为命中（OR），
+ * 因此 "c300 冷氣" 也能匹配到备注为 "c300冷氣三寶" 的账单，
+ * 只用分类记账（没写备注）的账单也能被分类名搜到
+ */
+const isKeywordMatched = (bill: Bill, filter: BillFilter) => {
+    const keywords = filter.keywords?.length
+        ? filter.keywords
+        : // 调用方未解析分类、标签名称时，退化为只匹配备注
+          tokenizeKeyword(filter.comment ?? "").map((text) => ({ text }));
+    if (keywords.length === 0) {
+        return true;
+    }
+    const comment = bill.comment?.toLowerCase() ?? "";
+    return keywords.every(
+        (keyword) =>
+            comment.includes(keyword.text) ||
+            keyword.categories?.includes(bill.categoryId) === true ||
+            keyword.tags?.some((t) => bill.tagIds?.includes(t)) === true,
+    );
 };
 
 const isAssetsMatched = (bill: Bill, assets?: boolean) => {
@@ -117,7 +138,7 @@ export const isBillMatched = (bill: Bill, filter: BillFilter) => {
         isTimeMatched(bill, filter.start, filter.end, filter.recent) &&
         isAssetsMatched(bill, filter.assets) &&
         isScheduledMatched(bill, filter.scheduled) &&
-        isCommentMatched(bill, filter.comment) &&
+        isKeywordMatched(bill, filter) &&
         isTagsMatched(bill, filter.tags) &&
         isCurrenciesMatched(
             bill,

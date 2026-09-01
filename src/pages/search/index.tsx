@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { orderBy, sortBy } from "lodash-es";
 import { Collapsible } from "radix-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -14,12 +15,17 @@ import {
     showBatchEdit,
 } from "@/components/ledger/batch-edit";
 import modal from "@/components/modal";
+import Money from "@/components/money";
+import Tag from "@/components/tag";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import useCategory from "@/hooks/use-category";
 import { useCurrency } from "@/hooks/use-currency";
 import { useCustomFilters } from "@/hooks/use-custom-filters";
-import type { Bill, BillFilter } from "@/ledger/type";
+import { useTag } from "@/hooks/use-tag";
+import { amountToNumber } from "@/ledger/bill";
+import { resolveFilterKeywords } from "@/ledger/keyword";
+import type { Bill, BillFilter, BillType } from "@/ledger/type";
 import { useIntl } from "@/locale";
 import { useBookStore } from "@/store/book";
 import { useLedgerStore } from "@/store/ledger";
@@ -57,6 +63,54 @@ const SORTS = [
     },
 ] as const;
 
+/** 快捷时间筛选，range 返回 [start, end] 毫秒时间戳 */
+const TIME_PRESETS = [
+    {
+        label: "unlimited",
+        range: () => [undefined, undefined] as const,
+    },
+    {
+        label: "last-7-days",
+        range: () =>
+            [
+                dayjs().subtract(6, "day").startOf("day").valueOf(),
+                dayjs().endOf("day").valueOf(),
+            ] as const,
+    },
+    {
+        label: "last-30-days",
+        range: () =>
+            [
+                dayjs().subtract(29, "day").startOf("day").valueOf(),
+                dayjs().endOf("day").valueOf(),
+            ] as const,
+    },
+    {
+        label: "this-month",
+        range: () =>
+            [
+                dayjs().startOf("month").valueOf(),
+                dayjs().endOf("month").valueOf(),
+            ] as const,
+    },
+    {
+        label: "last-month",
+        range: () =>
+            [
+                dayjs().subtract(1, "month").startOf("month").valueOf(),
+                dayjs().subtract(1, "month").endOf("month").valueOf(),
+            ] as const,
+    },
+    {
+        label: "this-year",
+        range: () =>
+            [
+                dayjs().startOf("year").valueOf(),
+                dayjs().endOf("year").valueOf(),
+            ] as const,
+    },
+] as const;
+
 export default function Page() {
     const t = useIntl();
 
@@ -91,6 +145,8 @@ export default function Page() {
         useShallow((state) => state.showAssetsInLedger),
     );
 
+    const { tags: allTags } = useTag();
+
     const [list, setList] = useState<Bill[]>([]);
     const [searched, setSearched] = useState(false);
     const toSearch = useCallback(async () => {
@@ -100,9 +156,47 @@ export default function Page() {
         }
         setEnableSelect(false);
         setSelectedIds([]);
-        const result = await StorageDeferredAPI.filter(book, form);
+        // 结果筛选只对上一次的搜索结果有意义，重新搜索时重置
+        setPickedCategories([]);
+        setPickedTags([]);
+        setPickedType(undefined);
+        // 搜索文本需要在主线程解析（worker 内拿不到 i18n 后的分类名）
+        const result = await StorageDeferredAPI.filter(
+            book,
+            resolveFilterKeywords(form, {
+                categories,
+                tags: allTags,
+            }),
+        );
         setList(result);
-    }, [form]);
+    }, [form, categories, allTags]);
+
+    /** 当前生效的快捷时间筛选 */
+    const activePreset = useMemo(() => {
+        if (form.recent !== undefined) {
+            return undefined;
+        }
+        return TIME_PRESETS.find(({ range }) => {
+            const [start, end] = range();
+            return form.start === start && form.end === end;
+        })?.label;
+    }, [form.start, form.end, form.recent]);
+
+    /** 点击快捷时间后立即重新查询（form 更新后由下方 effect 触发） */
+    const autoSearch = useRef(false);
+    const applyPreset = useCallback((preset: (typeof TIME_PRESETS)[number]) => {
+        const [start, end] = preset.range();
+        autoSearch.current = true;
+        setForm((prev) => ({ ...prev, start, end, recent: undefined }));
+    }, []);
+
+    useEffect(() => {
+        if (!autoSearch.current) {
+            return;
+        }
+        autoSearch.current = false;
+        toSearch();
+    }, [toSearch]);
 
     const navigate = useNavigate();
     const { addFilter } = useCustomFilters();
@@ -137,6 +231,96 @@ export default function Page() {
         return orderBy(list, [sort.by], [sort.order]);
     }, [list, sortIndex]);
 
+    // 对搜索结果的二次筛选（不重新查询，只筛当前结果）
+    const [pickedCategories, setPickedCategories] = useState<string[]>([]);
+    const [pickedTags, setPickedTags] = useState<string[]>([]);
+    const [pickedType, setPickedType] = useState<BillType | undefined>();
+
+    const toggle = useCallback(
+        (setter: typeof setPickedCategories, id: string) => {
+            setter((prev) =>
+                prev.includes(id)
+                    ? prev.filter((v) => v !== id)
+                    : [...prev, id],
+            );
+        },
+        [],
+    );
+
+    /** 结果中出现过的分类，按数量倒序 */
+    const categoryFacets = useMemo(() => {
+        const counts = new Map<string, number>();
+        for (const bill of list) {
+            counts.set(bill.categoryId, (counts.get(bill.categoryId) ?? 0) + 1);
+        }
+        return Array.from(counts.entries())
+            .map(([id, count]) => ({
+                id,
+                count,
+                name: categories.find((c) => c.id === id)?.name ?? id,
+            }))
+            .sort((a, b) => b.count - a.count);
+    }, [list, categories]);
+
+    /** 结果中出现过的标签，按数量倒序 */
+    const tagFacets = useMemo(() => {
+        const counts = new Map<string, number>();
+        for (const bill of list) {
+            for (const id of bill.tagIds ?? []) {
+                counts.set(id, (counts.get(id) ?? 0) + 1);
+            }
+        }
+        return Array.from(counts.entries())
+            .map(([id, count]) => ({
+                id,
+                count,
+                name: allTags.find((v) => v.id === id)?.name ?? id,
+            }))
+            .sort((a, b) => b.count - a.count);
+    }, [list, allTags]);
+
+    /** 结果中收入、支出各自的数量 */
+    const typeFacets = useMemo(
+        () =>
+            (["expense", "income"] as const)
+                .map((type) => ({
+                    type,
+                    count: list.filter((v) => v.type === type).length,
+                }))
+                .filter((v) => v.count > 0),
+        [list],
+    );
+
+    const visible = useMemo(
+        () =>
+            sorted.filter(
+                (bill) =>
+                    (pickedType === undefined || bill.type === pickedType) &&
+                    (pickedCategories.length === 0 ||
+                        pickedCategories.includes(bill.categoryId)) &&
+                    (pickedTags.length === 0 ||
+                        pickedTags.some((t) => bill.tagIds?.includes(t))),
+            ),
+        [sorted, pickedType, pickedCategories, pickedTags],
+    );
+
+    /** 当前展示结果的收支合计 */
+    const summary = useMemo(
+        () =>
+            visible.reduce(
+                (prev, bill) => {
+                    if (bill.type === "income") {
+                        prev.income += bill.amount;
+                    } else {
+                        prev.expense += bill.amount;
+                    }
+                    return prev;
+                },
+                { income: 0, expense: 0 },
+            ),
+        [visible],
+    );
+
     const [enableSelect, setEnableSelect] = useState(false);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const onSelectChange = (id: string) => {
@@ -150,9 +334,14 @@ export default function Page() {
     const allSelected =
         selectedIds.length === 0
             ? false
-            : selectedIds.length === sorted.length
+            : selectedIds.length === visible.length
               ? true
               : "indeterminate";
+
+    // 二次筛选后已选中的账单可能被隐藏，避免误操作到看不见的记录
+    useEffect(() => {
+        setSelectedIds([]);
+    }, [pickedCategories, pickedTags, pickedType]);
 
     const toBatchDelete = async () => {
         await modal.prompt({
@@ -167,7 +356,7 @@ export default function Page() {
     const toBatchEdit = async () => {
         const initial = selectedIds.reduce(
             (prev, id, index) => {
-                const bill = sorted.find((v) => v.id === id);
+                const bill = visible.find((v) => v.id === id);
                 if (!bill) {
                     return prev;
                 }
@@ -193,7 +382,7 @@ export default function Page() {
         const edit = await showBatchEdit(initial);
         const updatedEntries = selectedIds
             .map((id) => {
-                const bill = { ...sorted.find((v) => v.id === id) } as Bill;
+                const bill = { ...visible.find((v) => v.id === id) } as Bill;
                 if (!bill) {
                     return undefined;
                 }
@@ -240,12 +429,22 @@ export default function Page() {
                                     value={form.comment ?? ""}
                                     type="text"
                                     maxLength={50}
-                                    className="w-full bg-transparent outline-none"
+                                    placeholder={t("search-placeholder")}
+                                    className="w-full bg-transparent outline-none placeholder:text-foreground/40"
                                     onChange={(e) => {
                                         setForm((v) => ({
                                             ...v,
                                             comment: e.target.value,
                                         }));
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            e.currentTarget.blur();
+                                            toSearch();
+                                            setTimeout(() => {
+                                                setSearched(true);
+                                            }, 1000);
+                                        }
                                     }}
                                 />
                             </Clearable>
@@ -263,6 +462,19 @@ export default function Page() {
                             <i className="icon-[mdi--search]"></i>
                         </Button>
                     </div>
+                </div>
+                {/* quick time presets */}
+                <div className="w-full flex gap-2 pt-3 pb-1 px-1 overflow-x-auto scrollbar-hidden text-xs">
+                    {TIME_PRESETS.map((preset) => (
+                        <Tag
+                            key={preset.label}
+                            checked={activePreset === preset.label}
+                            onCheckedChange={() => applyPreset(preset)}
+                            className="flex-shrink-0 text-xs bg-transparent shadow-md"
+                        >
+                            {t(preset.label)}
+                        </Tag>
+                    ))}
                 </div>
                 <Collapsible.Root
                     open={filterOpen}
@@ -301,6 +513,93 @@ export default function Page() {
                         </HintTooltip>
                     </div>
                 </Collapsible.Root>
+                {/* 对搜索结果的二次筛选 */}
+                {list.length > 0 && (
+                    <div className="w-full flex flex-col gap-1 pt-1 text-xs">
+                        {typeFacets.length > 1 && (
+                            <div className="flex gap-2 px-1 overflow-x-auto scrollbar-hidden">
+                                {typeFacets.map(({ type, count }) => (
+                                    <Tag
+                                        key={type}
+                                        checked={pickedType === type}
+                                        onCheckedChange={() =>
+                                            setPickedType((prev) =>
+                                                prev === type
+                                                    ? undefined
+                                                    : type,
+                                            )
+                                        }
+                                        className="flex-shrink-0 text-xs bg-transparent shadow-md"
+                                    >
+                                        {t(type)} {count}
+                                    </Tag>
+                                ))}
+                            </div>
+                        )}
+                        {categoryFacets.length > 1 && (
+                            <div className="flex items-center gap-2 px-1">
+                                <i className="icon-[mdi--category-plus-outline] flex-shrink-0"></i>
+                                <div className="flex-1 flex gap-2 overflow-x-auto scrollbar-hidden py-1">
+                                    {categoryFacets.map((facet) => (
+                                        <Tag
+                                            key={facet.id}
+                                            checked={pickedCategories.includes(
+                                                facet.id,
+                                            )}
+                                            onCheckedChange={() =>
+                                                toggle(
+                                                    setPickedCategories,
+                                                    facet.id,
+                                                )
+                                            }
+                                            className="flex-shrink-0 text-xs bg-transparent shadow-md"
+                                        >
+                                            {facet.name} {facet.count}
+                                        </Tag>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {tagFacets.length > 0 && (
+                            <div className="flex items-center gap-2 px-1">
+                                <i className="icon-[mdi--tag-outline] flex-shrink-0"></i>
+                                <div className="flex-1 flex gap-2 overflow-x-auto scrollbar-hidden py-1">
+                                    {tagFacets.map((facet) => (
+                                        <Tag
+                                            key={facet.id}
+                                            checked={pickedTags.includes(
+                                                facet.id,
+                                            )}
+                                            onCheckedChange={() =>
+                                                toggle(setPickedTags, facet.id)
+                                            }
+                                            className="flex-shrink-0 text-xs bg-transparent shadow-md"
+                                        >
+                                            {facet.name} {facet.count}
+                                        </Tag>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {/* 当前展示结果的收支合计 */}
+                        <div className="flex items-center gap-4 px-4 pt-1 text-foreground/80">
+                            <div className="flex items-center gap-1">
+                                {t("expense")}:
+                                <Money
+                                    value={amountToNumber(summary.expense)}
+                                    largeAmountThreshold={100000}
+                                />
+                            </div>
+                            <div className="flex items-center gap-1">
+                                {t("income")}:
+                                <Money
+                                    value={amountToNumber(summary.income)}
+                                    largeAmountThreshold={100000}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <div
                     className={cn(
                         "flex items-center justify-between px-4 text-xs text-foreground/80",
@@ -310,7 +609,7 @@ export default function Page() {
                     <div className="flex gap-2 items-center">
                         {!enableSelect ? (
                             <>
-                                {sorted.length > 0 && (
+                                {visible.length > 0 && (
                                     <Button
                                         className="p-1 h-fit"
                                         variant={"ghost"}
@@ -322,7 +621,7 @@ export default function Page() {
                                         {t("multi-select")}
                                     </Button>
                                 )}
-                                {t("total-records", { n: sorted.length })}
+                                {t("total-records", { n: visible.length })}
                             </>
                         ) : (
                             <>
@@ -331,7 +630,7 @@ export default function Page() {
                                         selectedIds.length === 0
                                             ? false
                                             : selectedIds.length ===
-                                                sorted.length
+                                                visible.length
                                               ? true
                                               : "indeterminate"
                                     }
@@ -340,7 +639,7 @@ export default function Page() {
                                             setSelectedIds([]);
                                         } else {
                                             setSelectedIds(
-                                                sorted.map((v) => v.id),
+                                                visible.map((v) => v.id),
                                             );
                                         }
                                     }}
@@ -357,7 +656,7 @@ export default function Page() {
                                     {t("cancel")}
                                 </Button>
                                 <span>
-                                    {selectedIds.length}/{sorted.length}
+                                    {selectedIds.length}/{visible.length}
                                 </span>
                                 {selectedIds.length > 0 && (
                                     <>
@@ -401,7 +700,7 @@ export default function Page() {
                     </div>
                 </div>
                 <Ledger
-                    bills={sorted}
+                    bills={visible}
                     showTime
                     selectedIds={enableSelect ? selectedIds : undefined}
                     onSelectChange={onSelectChange}

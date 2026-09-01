@@ -35,11 +35,28 @@ export type Budget = {
     excludeTags?: string[];
 };
 
+/** 搜索关键词，由 resolveKeywords 从搜索文本解析而来 */
+export type BillKeyword = {
+    /** 关键词（已转为小写） */
+    text: string;
+    /** 名称命中该关键词的分类 id */
+    categories?: string[];
+    /** 名称命中该关键词的标签 id */
+    tags?: string[];
+};
+
 /**
  * 过滤器，不需要转换，可以略过
  */
 export type BillFilter = Partial<{
+    /** 搜索文本，命中备注、分类名或标签名，多个关键词以空格分隔 */
     comment: string;
+    /**
+     * comment 解析后的关键词，查询前由主线程解析（worker 内无法访问 i18n 后的分类名）
+     *
+     * 不需要持久化，保存过滤器时只保存 comment 即可
+     */
+    keywords: BillKeyword[];
     recent?: {
         value: number;
         unit: "year" | "month" | "week" | "day";

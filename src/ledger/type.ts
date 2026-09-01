@@ -5,6 +5,7 @@ import type { Full } from "@/database/stash";
 import type {
     BillFilter,
     BillFilterView,
+    BillKeyword,
     BillTagGroup,
     Budget,
     CustomCurrency,
@@ -15,6 +16,7 @@ import type {
 
 export type {
     BillFilter,
+    BillKeyword,
     BillTagGroup,
     Budget,
     CustomCurrency,

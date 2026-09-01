@@ -738,5 +738,8 @@
   "reminder-tomorrow": "明日提醒",
   "reminder": "提醒",
   "reminders": "提醒",
-  "no-reminders-today": "今日暂无提醒"
+  "no-reminders-today": "今日暂无提醒",
+  "search-placeholder": "搜索备注、分类、标签",
+  "last-7-days": "近 7 天",
+  "last-30-days": "近 30 天"
 }
