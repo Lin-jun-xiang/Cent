@@ -40,15 +40,39 @@ export default defineConfig(({ mode }) => {
             filename: "sw.ts",
             registerType: "autoUpdate",
             injectRegister: "auto",
-            includeAssets: ["favicon.ico", "apple-touch-icon.png"],
+            includeAssets: [
+                "favicon.ico",
+                "apple-touch-icon.png",
+                "icon.png",
+                "icon-192.png",
+                "icon-maskable.png",
+            ],
             manifest: {
                 name: "Cent - 日計",
                 short_name: "Cent",
                 description: "Accounting your life - 記錄每一天",
                 theme_color: "#ffffff",
                 icons: [
-                    { src: "icon.png", sizes: "192x192", type: "image/png" },
-                    { src: "icon.png", sizes: "512x512", type: "image/png" },
+                    {
+                        src: "icon-192.png",
+                        sizes: "192x192",
+                        type: "image/png",
+                        purpose: "any",
+                    },
+                    {
+                        src: "icon.png",
+                        sizes: "512x512",
+                        type: "image/png",
+                        purpose: "any",
+                    },
+                    // Android 會把圖示裁成圓形或圓角，maskable 版本已把內容縮到
+                    // 安全範圍內、四周用畫面本身的奶油底色延伸，邊緣的角色才不會被切掉
+                    {
+                        src: "icon-maskable.png",
+                        sizes: "512x512",
+                        type: "image/png",
+                        purpose: "maskable",
+                    },
                 ],
                 protocol_handlers: [
                     {
