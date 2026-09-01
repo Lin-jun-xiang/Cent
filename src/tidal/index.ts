@@ -214,6 +214,17 @@ export const createTidal = <Item extends BaseItem>({
         notifyChange(storeFullName);
     };
 
+    /**
+     * 主动从远端拉取最新数据（增量）
+     * 仅比对 structure 的 sha，无变化时几乎不产生额外流量
+     */
+    const pull = async (storeFullName?: string) => {
+        const storeNames = storeFullName
+            ? [storeFullName]
+            : Array.from(storeMap.keys());
+        await Promise.all(storeNames.map((name) => init(name)));
+    };
+
     const create = async (name: string) => {
         const syncer = getSyncer();
         return await syncer.createStore(name);
@@ -466,6 +477,7 @@ export const createTidal = <Item extends BaseItem>({
 
     return {
         init,
+        pull,
         create,
         getAllItems,
         getMeta,

@@ -86,10 +86,18 @@ export const WebDAVEndpoint: SyncEndpointFactory = {
             return meta._webDAVUserAliases;
         };
 
+        // 由 toSync({ pull: true }) 置位，只在用户手动触发时才向远端拉取
+        let pullRequested = false;
         const scheduler = new Scheduler(async (signal) => {
+            const shouldPull = pullRequested;
+            pullRequested = false;
+            // 先推送本地改动，再拉取远端，避免本地未同步内容被覆盖
             const [finished, cancel] = repo.sync();
             signal.onabort = cancel;
             await finished;
+            if (shouldPull && !signal.aborted) {
+                await repo.pull();
+            }
         });
 
         return {
@@ -168,7 +176,12 @@ export const WebDAVEndpoint: SyncEndpointFactory = {
 
             getIsNeedSync: repo.hasStashes,
             onSync: scheduler.onProcess.bind(scheduler),
-            toSync: scheduler.schedule.bind(scheduler),
+            toSync: async (options) => {
+                if (options?.pull) {
+                    pullRequested = true;
+                }
+                return scheduler.schedule();
+            },
 
             forceNeedSync: repo.forceNeedSync,
         };

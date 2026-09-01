@@ -41,7 +41,11 @@ export type SyncEndpoint = {
 
     getIsNeedSync: () => Promise<boolean>;
     onSync: (processor: (finished: Promise<void>) => void) => () => void;
-    toSync: () => Promise<any>;
+    /**
+     * 触发同步。
+     * 默认只上传本地改动；带 { pull: true } 时会额外从远端拉取其他人的最新数据
+     */
+    toSync: (options?: { pull?: boolean }) => Promise<any>;
 
     getUserInfo: (id?: string) => Promise<UserInfo>;
     getCollaborators: (id: string) => Promise<UserInfo[]>;
