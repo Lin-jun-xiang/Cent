@@ -10,7 +10,7 @@ import { ExpenseBillCategories, IncomeBillCategories } from "@/ledger/category";
 import type { Bill } from "@/ledger/type";
 import { categoriesGridClassName } from "@/ledger/utils";
 import { useIntl } from "@/locale";
-import type { EditBill } from "@/store/ledger";
+import type { EditBill, NewBillDefaults } from "@/store/ledger";
 import { usePreferenceStore } from "@/store/preference";
 import { useUserStore } from "@/store/user";
 import { cn } from "@/utils";
@@ -33,6 +33,11 @@ import { RemarkHint } from "./remark";
 import ResizeHandle from "./resize";
 import TagGroupSelector from "./tag-group";
 
+/** 表單編輯中的草稿：記帳者要等到儲存時才由 store 補上 */
+type BillDraft = Omit<EditBill, "creatorId"> & {
+    creatorId?: Bill["creatorId"];
+};
+
 const defaultBill = {
     type: "expense" as Bill["type"],
     comment: "",
@@ -45,7 +50,8 @@ export default function EditorForm({
     onCancel,
     onConfirm,
 }: {
-    edit?: EditBill;
+    /** 既有帳單（編輯），或新增時要帶入的預設值 */
+    edit?: EditBill | NewBillDefaults;
     onConfirm?: (v: Omit<Bill, "id" | "creatorId">) => void;
     onCancel?: () => void;
 }) {
@@ -59,7 +65,10 @@ export default function EditorForm({
 
     const { incomes, expenses, categories: allCategories } = useCategory();
 
-    const isCreate = edit === undefined;
+    // 帶了預設日期的新增仍然算新增（預測、自動定位等行為都要照舊）
+    const isCreate = edit === undefined || "isNew" in edit;
+    /** 只有在編輯既有帳單時才有值 */
+    const editing = isCreate ? undefined : (edit as EditBill);
 
     const predictCategory = useMemo(() => {
         // 只有新增账单时才展示预测
@@ -98,8 +107,8 @@ export default function EditorForm({
         }
         return defaultSub.id;
     };
-    const [billState, setBillState] = useState(() => {
-        const init = {
+    const [billState, setBillState] = useState<BillDraft>(() => {
+        const init: BillDraft = {
             ...defaultBill,
             time: Date.now(),
             ...edit,
@@ -109,7 +118,7 @@ export default function EditorForm({
                     edit?.categoryId ?? defaultBill.categoryId,
                 ),
         };
-        if (edit?.currency?.target === baseCurrency.id) {
+        if (editing?.currency?.target === baseCurrency.id) {
             delete init.currency;
         }
         return init;
@@ -172,7 +181,7 @@ export default function EditorForm({
     };
 
     const locationRef = useRef<HTMLButtonElement>(null);
-    const isAdd = useRef(!edit);
+    const isAdd = useRef(isCreate);
     useEffect(() => {
         if (
             !isAdd.current ||
@@ -258,7 +267,7 @@ export default function EditorForm({
     // 在編輯已存在帳單時不允許切換到提醒（只有新增才有三個模式）
     type EditorMode = "expense" | "income" | "reminder";
     const [mode, setMode] = useState<EditorMode>(
-        (edit as any)?._mode === "reminder"
+        (editing as any)?._mode === "reminder"
             ? "reminder"
             : (billState.type as EditorMode),
     );
@@ -791,9 +800,12 @@ export default function EditorForm({
                                 className={cn("flex-1")}
                                 onKey={(v) => {
                                     if (v === "r") {
+                                        const time = billState.time;
                                         toConfirm();
                                         setTimeout(() => {
-                                            goAddBill();
+                                            // 連續記帳時沿用這一筆的日期，
+                                            // 補記前幾天的帳不用每筆都重選
+                                            goAddBill({ time });
                                         }, 10);
                                     }
                                 }}

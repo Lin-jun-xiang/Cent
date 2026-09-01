@@ -39,6 +39,7 @@ import { useBookStore } from "@/store/book";
 import { useLedgerStore } from "@/store/ledger";
 import { usePreferenceStore } from "@/store/preference";
 import { useUserStore } from "@/store/user";
+import { useViewStore } from "@/store/view";
 import { cn } from "@/utils";
 import { filterOrderedBillListByTimeRange } from "@/utils/filter";
 import { denseDate } from "@/utils/time";
@@ -274,6 +275,19 @@ export default function Page() {
     // 供 touchmove 判斷「已經是今天，不能再往未來滑」
     isTodayRef.current = isToday;
 
+    /**
+     * 把目前檢視的日期同步給全域，讓導覽列的記帳按鈕能預設帶入這一天
+     * 離開首頁時清掉，其他頁面的記帳仍然以今天為準
+     */
+    useEffect(() => {
+        useViewStore
+            .getState()
+            .setViewingDate(currentDate.startOf("day").valueOf());
+        return () => {
+            useViewStore.getState().setViewingDate(undefined);
+        };
+    }, [currentDate]);
+
     /** 進場動畫的 class；每次換日都換 key 讓動畫重播 */
     const dayAnimClass =
         daySwitch.dir === "next" ? "animate-day-next" : "animate-day-prev";
@@ -491,6 +505,7 @@ export default function Page() {
                                 bills={creatorFilteredBills}
                                 range={calendarRange}
                                 selectedCreatorIds={selectedCreatorIds}
+                                selected={currentDate}
                                 onDateClick={(date) => {
                                     switchDay(date);
                                     setCalendarOpen(false);

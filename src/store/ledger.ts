@@ -19,6 +19,18 @@ export type EditBill = Omit<OutputType<Bill>, "id"> & {
     creatorId?: Bill["creatorId"];
 };
 
+/**
+ * 新增帳單時預先帶入的欄位
+ *
+ * 例如在首頁停在 8/31 時按下記帳，就把那天帶進表單；
+ * isNew 用來和「編輯既有帳單」區分，帶了預設值仍然算新增
+ */
+export type NewBillDefaults = Partial<
+    Pick<Bill, "time" | "type" | "categoryId">
+> & {
+    isNew: true;
+};
+
 type LedgerStoreState = {
     /** 首次加载时只有前200条数据，如果需要全部数据，必须调用 ledgerStore.refreshBillList() */
     bills: OutputType<Bill>[];

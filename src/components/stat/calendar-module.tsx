@@ -19,10 +19,13 @@ export function CalendarModule({
     range,
     onDateClick,
     selectedCreatorIds,
+    selected,
 }: {
     bills: Bill[];
     range: [number, number];
     onDateClick?: (date: dayjs.Dayjs) => void;
+    /** 目前選中的日期，用來在日曆上標示使用者停在哪一天 */
+    selected?: dayjs.Dayjs;
     /** 若提供且非空，只顯示 creatorId 在此集合內的提醒；未提供或空集合代表全部 */
     selectedCreatorIds?: Set<string>;
 }) {
@@ -30,8 +33,8 @@ export function CalendarModule({
 
     // --- 月份导航 ---
     const initialMonth = useMemo(
-        () => dayjs(range[1]).startOf("month"),
-        [range],
+        () => (selected ?? dayjs(range[1])).startOf("month"),
+        [range, selected],
     );
     const [currentMonth, setCurrentMonth] = useState(initialMonth);
 
@@ -370,6 +373,11 @@ export function CalendarModule({
                                     day={day}
                                     isCurrentMonth={isCurrentMonth}
                                     isToday={isToday}
+                                    isSelected={
+                                        selected
+                                            ? day.isSame(selected, "day")
+                                            : false
+                                    }
                                     data={data}
                                     fmt={fmt}
                                     reminders={dayReminders}
@@ -410,6 +418,7 @@ function DayCell({
     day,
     isCurrentMonth,
     isToday,
+    isSelected,
     data,
     fmt,
     reminders,
@@ -419,6 +428,8 @@ function DayCell({
     day: dayjs.Dayjs;
     isCurrentMonth: boolean;
     isToday: boolean;
+    /** 使用者目前停留的那一天 */
+    isSelected: boolean;
     data?: { income: number; expense: number };
     fmt: (v: number) => string;
     reminders: Reminder[];
@@ -438,10 +449,10 @@ function DayCell({
     });
 
     const cellClass = cn(
-        "flex flex-col items-center py-1 min-h-[52px] rounded-md text-center transition-colors select-none",
+        "relative flex flex-col items-center py-1 min-h-[52px] rounded-md text-center transition-colors select-none",
         !isCurrentMonth && "opacity-30",
-        // 今天用主色外框標示，不另外換一個顏色
-        isToday && "ring-2 ring-primary",
+        // 選中：實心外框（熱區底色仍然看得見，所以用外框而不是換底色）
+        isSelected && "ring-2 ring-primary ring-offset-1 ring-offset-card",
         isCurrentMonth && onDateClick && "cursor-pointer hover:bg-muted",
     );
     const cellStyle =
@@ -451,8 +462,11 @@ function DayCell({
         <>
             <span
                 className={cn(
-                    "text-[12px] font-medium leading-none",
-                    isToday && "text-primary font-bold",
+                    "text-[12px] leading-none",
+                    isSelected ? "font-bold" : "font-medium",
+                    // 今天：數字外加一圈主色膠囊表示身分；「選中」則是格子外框，兩者互不衝突
+                    isToday &&
+                        "font-bold text-primary bg-primary/15 rounded-full px-1.5 py-0.5",
                 )}
             >
                 {day.date()}

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router";
+import { resolveNewBillTime, useViewStore } from "@/store/view";
 import ComplexAddButton from "./add-button";
 import { goAddBill } from "./bill-editor";
 import { afterAddBillPromotion } from "./promotion";
@@ -17,6 +18,13 @@ export default function Navigation() {
     const switchTab = (value: "/" | "/stat" | "/search") => {
         navigate(`${value}`);
     };
+
+    /** 首頁停在非今天的日期時，新增帳單要落在那一天 */
+    const viewingDate = useViewStore((state) => state.viewingDate);
+    const newBillTime = useMemo(
+        () => resolveNewBillTime(viewingDate),
+        [viewingDate],
+    );
     return createPortal(
         <div
             className="floating-tab fixed w-screen h-18 flex items-center justify-around sm:h-screen
@@ -53,7 +61,12 @@ export default function Navigation() {
 
                 <ComplexAddButton
                     onClick={() => {
-                        goAddBill();
+                        // 在首頁看著其他日期時記帳，預設就記在那一天
+                        goAddBill(
+                            currentTab === "/" && newBillTime !== undefined
+                                ? { time: newBillTime }
+                                : undefined,
+                        );
                         afterAddBillPromotion();
                     }}
                 />
