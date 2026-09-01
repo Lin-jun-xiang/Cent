@@ -58,9 +58,9 @@ export default function AnalysisMap({
     return (
         <div
             ref={containerRef}
-            className="rounded-md border p-2 w-full flex flex-col relative"
+            className="surface p-3 w-full flex flex-col relative"
         >
-            <h2 className="font-medium text-lg my-3 text-center">
+            <h2 className="section-title text-center py-1">
                 {t("ledger-footprint")}
             </h2>
             {!hasLocationData ? (

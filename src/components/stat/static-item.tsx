@@ -48,7 +48,7 @@ export function StaticItem({
                                 ? "bg-semantic-expense"
                                 : type === "income"
                                   ? "bg-semantic-income"
-                                  : "bg-stone-700",
+                                  : "bg-primary",
                         )}
                         style={{ width: `${percent * 100}%` }}
                     >
@@ -63,7 +63,7 @@ export function StaticItem({
                 }}
             >
                 <div className="flex items-center w-full">
-                    <div className="flex-1 gap-1">
+                    <div className="flex-1 gap-1 tnum">
                         {type === "expense"
                             ? "-"
                             : type === "income"

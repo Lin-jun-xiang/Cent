@@ -730,5 +730,17 @@
   "no-reminders-today": "No reminders today",
   "search-placeholder": "Search notes, categories, tags",
   "last-7-days": "Last 7 Days",
-  "last-30-days": "Last 30 Days"
+  "last-30-days": "Last 30 Days",
+  "as-chart": "Chart",
+  "as-calendar": "Calendar",
+  "as-bars": "Bars",
+  "as-pie": "Pie",
+  "no-data": "No data in this period",
+  "period-summary": "Period Summary",
+  "day-avg": "Daily avg",
+  "vs-previous": "vs. previous",
+  "insufficient-data": "not enough data",
+  "highest-single": "Largest entry",
+  "less": "Less",
+  "more": "More"
 }

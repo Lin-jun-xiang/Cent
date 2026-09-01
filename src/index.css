@@ -206,29 +206,29 @@ button {
 	   - Primary semantic color
 	   - Legacy '-medium' alias kept for compatibility
 	   注意：這幾個變數會被 ECharts 讀去畫 canvas，保持 hex 以確保舊瀏覽器可解析 */
-	--color-expense: #e2685e; /* coral red - primary expense color */
+	--color-expense: #dd5347; /* coral red - primary expense color */
 	--color-expense-medium-legacy: #ef9a94; /* medium (legacy) */
 	/* soft: 用於卡片、標籤底色，避免大面積飽和色 */
-	--color-expense-soft: #fdefed;
-	--color-expense-strong: #c94f46;
+	--color-expense-soft: #fdeeec;
+	--color-expense-strong: #c0392e;
 
-	--color-income: #3fa898; /* teal green - primary income color */
+	--color-income: #2b9c8c; /* teal green - primary income color */
 	--color-income-medium-legacy: #86c9bf; /* medium (legacy) */
-	--color-income-soft: #eaf6f4;
-	--color-income-strong: #2f8b7d;
+	--color-income-soft: #e9f5f2;
+	--color-income-strong: #1f7466;
 }
 
 /* Dark mode overrides for semantic colors (optional) */
 .dark {
-	--color-expense: #ef7b70;
+	--color-expense: #e8635a;
 	--color-expense-medium-legacy: #f3a49e;
 	--color-expense-soft: #3a2422;
-	--color-expense-strong: #f79b92;
+	--color-expense-strong: #f2857c;
 
-	--color-income: #4fbdab;
+	--color-income: #2fa693;
 	--color-income-medium-legacy: #8fd2c8;
 	--color-income-soft: #16302d;
-	--color-income-strong: #6fd0c0;
+	--color-income-strong: #64c9b7;
 }
 
 @layer base {
@@ -303,18 +303,32 @@ button {
 	--current-tag-color: var(--tag-gray);
 }
 
-/* 图表分类 / 协作者系列色（ECharts 风格调色板，供 `src/utils/color.ts` 读取）
-   同一明度、彩度區間內取九個色相，避免相鄰色塊亮度亂跳 */
+/* 图表分类 / 协作者系列色（供 `src/utils/color.ts` 读取）
+   八個固定槽位，經量測：明度同帶、彩度不成灰、相鄰色在紅綠色弱下可辨、對卡片底對比 ≥3:1 */
 :root {
-	--category-color-1: #3fa898;
-	--category-color-2: #e2685e;
-	--category-color-3: #e8a33f;
-	--category-color-4: #5b93d6;
-	--category-color-5: #9b74cc;
-	--category-color-6: #6dbb6a;
-	--category-color-7: #e0805a;
-	--category-color-8: #45b3c4;
-	--category-color-9: #d4699a;
+	--category-color-1: #2b9c8c;
+	--category-color-2: #dd5347;
+	--category-color-3: #3b7ad0;
+	--category-color-4: #c07f0d;
+	--category-color-5: #9057d6;
+	--category-color-6: #4aa338;
+	--category-color-7: #c74580;
+	--category-color-8: #0f8fbf;
+	/* 第 9 類起一律收成中性灰的「其他」，不再自動生成新色相 */
+	--category-color-other: #8b989c;
+	/* 日曆熱區：單一色相五階（淺→深），最淺階仍可從卡片底色分辨 */
+	--heat-0: #eaeeef;
+	--heat-1: #6cbcad;
+	--heat-2: #4fa998;
+	--heat-3: #358f7f;
+	--heat-4: #237364;
+	--heat-5: #125548;
+	/* 熱區底色：格子裡還要放數字，所以用低透明度的色階，文字維持文字色 */
+	--heat-bg-1: rgba(43, 156, 140, 0.07);
+	--heat-bg-2: rgba(43, 156, 140, 0.13);
+	--heat-bg-3: rgba(43, 156, 140, 0.2);
+	--heat-bg-4: rgba(43, 156, 140, 0.28);
+	--heat-bg-5: rgba(43, 156, 140, 0.36);
 	/* 圖表座標軸、格線、tooltip 用色：保持 hex，canvas 解析最保險 */
 	--chart-axis-label: #98a3ac;
 	--chart-grid-line: #e9edf0;
@@ -328,20 +342,31 @@ button {
 	--collaborator-color-6: var(--category-color-6);
 	--collaborator-color-7: var(--category-color-7);
 	--collaborator-color-8: var(--category-color-8);
-	--collaborator-color-9: var(--category-color-9);
+	--collaborator-color-other: var(--category-color-other);
 }
 
 /* 深色模式的圖表系列色：提亮、降彩度，避免在深底上發黑 */
 .dark {
-	--category-color-1: #52bdac;
-	--category-color-2: #ef7b70;
-	--category-color-3: #efb45c;
-	--category-color-4: #75a8e4;
-	--category-color-5: #ae8ada;
-	--category-color-6: #83cb80;
-	--category-color-7: #ec9673;
-	--category-color-8: #5cc4d4;
-	--category-color-9: #e07fab;
+	--category-color-1: #2fa693;
+	--category-color-2: #e8635a;
+	--category-color-3: #4f8ada;
+	--category-color-4: #bf8926;
+	--category-color-5: #9d6ada;
+	--category-color-6: #4fab3f;
+	--category-color-7: #d15a8f;
+	--category-color-8: #1fa0c8;
+	--category-color-other: #7b878c;
+	--heat-0: #2c343c;
+	--heat-1: #256f60;
+	--heat-2: #2f8674;
+	--heat-3: #3f9c8a;
+	--heat-4: #57b4a2;
+	--heat-5: #7ecfbf;
+	--heat-bg-1: rgba(126, 207, 191, 0.09);
+	--heat-bg-2: rgba(126, 207, 191, 0.15);
+	--heat-bg-3: rgba(126, 207, 191, 0.22);
+	--heat-bg-4: rgba(126, 207, 191, 0.3);
+	--heat-bg-5: rgba(126, 207, 191, 0.38);
 	--chart-axis-label: #7f8b95;
 	--chart-grid-line: #2c353d;
 	--chart-surface: #232b32;

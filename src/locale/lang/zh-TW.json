@@ -746,5 +746,17 @@
   "item": "筆",
   "search-placeholder": "搜尋備註、類別、標籤",
   "last-7-days": "近 7 天",
-  "last-30-days": "近 30 天"
+  "last-30-days": "近 30 天",
+  "as-chart": "折線",
+  "as-calendar": "日曆",
+  "as-bars": "條狀",
+  "as-pie": "圓餅",
+  "no-data": "該期間沒有資料",
+  "period-summary": "期間概況",
+  "day-avg": "日均",
+  "vs-previous": "較上期",
+  "insufficient-data": "資料不足",
+  "highest-single": "最高單筆",
+  "less": "少",
+  "more": "多"
 }

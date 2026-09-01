@@ -741,5 +741,17 @@
   "no-reminders-today": "今日暂无提醒",
   "search-placeholder": "搜索备注、分类、标签",
   "last-7-days": "近 7 天",
-  "last-30-days": "近 30 天"
+  "last-30-days": "近 30 天",
+  "as-chart": "折线",
+  "as-calendar": "日历",
+  "as-bars": "条状",
+  "as-pie": "饼图",
+  "no-data": "该期间没有数据",
+  "period-summary": "期间概况",
+  "day-avg": "日均",
+  "vs-previous": "较上期",
+  "insufficient-data": "数据不足",
+  "highest-single": "最高单笔",
+  "less": "少",
+  "more": "多"
 }

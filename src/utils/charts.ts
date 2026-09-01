@@ -457,6 +457,8 @@ const chartTheme = () => {
             itemWidth: 10,
             itemHeight: 10,
             icon: "roundRect",
+            top: 6,
+            left: 2,
             textStyle: { color: label, fontSize: 11 },
         },
     };
@@ -479,7 +481,8 @@ export const overallTrendOption = (
                 left: 4,
                 right: 12,
                 bottom: 4,
-                top: 56,
+                // 標題已移到卡片抬頭，這裡只留圖例的高度
+                top: 34,
                 containLabel: true,
             },
             xAxis: {
@@ -550,7 +553,7 @@ export const userTrendOption = (
             left: 4,
             right: 12,
             bottom: 4,
-            top: 56,
+            top: 34,
             containLabel: true,
         },
         xAxis: {
@@ -597,31 +600,26 @@ export const structureOption = (dataset: any[], options?: ECOption) => {
     const theme = chartTheme();
     return merge(
         {
-            title: {
-                text: "支出结构",
-                left: "center",
-                textStyle: {
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: theme.text,
-                },
-            },
             tooltip: {
                 trigger: "item",
                 formatter: "{b}: {c} ({d}%)",
                 ...theme.tooltip,
             },
             legend: {
-                orient: "vertical",
-                left: "left",
                 ...theme.legend,
+                // 名稱已直接標在扇形旁，圖例只作為色彩對照，放底部可捲動
+                type: "scroll",
+                orient: "horizontal",
+                top: undefined,
+                bottom: 0,
+                left: "center",
             },
             series: [
                 {
                     name: "支出类型",
                     type: "pie",
-                    center: ["55%", "52%"],
-                    radius: ["42%", "66%"],
+                    center: ["50%", "46%"],
+                    radius: ["44%", "68%"],
                     itemStyle: {
                         borderRadius: 8,
                         // 用卡片色描邊，深色模式下才不會出現白框

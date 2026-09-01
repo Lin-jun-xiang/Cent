@@ -24,13 +24,14 @@ import { showSortableList } from "@/components/sortable";
 import { AnalysisCloud } from "@/components/stat/analysic-cloud";
 import { AnalysisDetail } from "@/components/stat/analysis-detail";
 import AnalysisMap from "@/components/stat/analysis-map";
-import { useChartPart } from "@/components/stat/chart-part";
+import { CardHead, useChartPart } from "@/components/stat/chart-part";
 import { DateSliced, useDateSliced } from "@/components/stat/date-slice";
 import {
     type FocusType,
     FocusTypeSelector,
     FocusTypes,
 } from "@/components/stat/focus-type";
+import { PeriodSummary } from "@/components/stat/period-summary";
 import { TagItem } from "@/components/stat/static-item";
 import { Button } from "@/components/ui/button";
 import WidgetPreview from "@/components/widget/preview";
@@ -43,6 +44,7 @@ import {
 } from "@/hooks/use-custom-filters";
 import { useTag } from "@/hooks/use-tag";
 import { useWidget } from "@/hooks/use-widget";
+import { amountToNumber } from "@/ledger/bill";
 import type {
     BillFilter,
     BillFilterView,
@@ -345,12 +347,31 @@ export default function Page() {
             if (module === "base-analysis") {
                 return (
                     <Fragment key={module}>
+                        <PeriodSummary
+                            focusType={focusType}
+                            totals={dataSources.total}
+                            analysis={analysis}
+                            count={filteredByCreator.length}
+                            highest={
+                                focusType === "income"
+                                    ? dataSources.highestIncomeBill
+                                        ? amountToNumber(
+                                              dataSources.highestIncomeBill
+                                                  .amount,
+                                          )
+                                        : undefined
+                                    : dataSources.highestExpenseBill
+                                      ? amountToNumber(
+                                            dataSources.highestExpenseBill
+                                                .amount,
+                                        )
+                                      : undefined
+                            }
+                        />
                         {Part}
                         {tagStructure.length > 0 && (
-                            <div className="rounded-md border p-2 w-full flex flex-col">
-                                <h2 className="font-medium text-lg my-3 text-center">
-                                    {t("tag-details")}
-                                </h2>
+                            <div className="w-full surface overflow-hidden flex flex-col">
+                                <CardHead title={t("tag-details")} />
                                 <div className="table w-full border-collapse">
                                     <div className="table-row-group divide-y">
                                         {tagStructure.map((struct) => {
@@ -405,11 +426,9 @@ export default function Page() {
                 return (
                     <div
                         key={module}
-                        className="rounded-md border p-2 w-full flex flex-col"
+                        className="w-full surface overflow-hidden flex flex-col"
                     >
-                        <h2 className="font-medium text-lg my-3 text-center">
-                            {t("analysis")}
-                        </h2>
+                        <CardHead title={t("analysis")} />
                         <AnalysisDetail
                             analysis={analysis}
                             type={focusType}
@@ -421,8 +440,11 @@ export default function Page() {
             if (module === "top-expense") {
                 if (!dataSources.highestExpenseBill) return null;
                 return (
-                    <div key={module} className="rounded-md border p-2 w-full">
-                        {t("highest-expense")}:
+                    <div
+                        key={module}
+                        className="w-full surface overflow-hidden"
+                    >
+                        <CardHead title={t("highest-expense")} />
                         <BillItem
                             className="w-full"
                             bill={dataSources.highestExpenseBill}
@@ -437,8 +459,11 @@ export default function Page() {
             if (module === "top-income") {
                 if (!dataSources.highestIncomeBill) return null;
                 return (
-                    <div key={module} className="rounded-md border p-2 w-full">
-                        {t("highest-income")}:
+                    <div
+                        key={module}
+                        className="w-full surface overflow-hidden"
+                    >
+                        <CardHead title={t("highest-income")} />
                         <BillItem
                             className="w-full"
                             bill={dataSources.highestIncomeBill}
@@ -455,7 +480,10 @@ export default function Page() {
                 const widget = widgets.find((w) => w.id === widgetId);
                 if (!widget) return null;
                 return (
-                    <div key={module} className="rounded-md border w-full">
+                    <div
+                        key={module}
+                        className="w-full surface overflow-hidden"
+                    >
                         <WidgetPreview
                             widget={widget}
                             bills={getBillsByFocusType(focusType)}
@@ -474,8 +502,10 @@ export default function Page() {
             getBillsByFocusType,
             analysis,
             analysisUnit,
+            dataSources.total,
             dataSources.highestExpenseBill,
             dataSources.highestIncomeBill,
+            filteredByCreator.length,
             t,
             widgets,
         ],

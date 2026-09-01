@@ -119,6 +119,29 @@ export function CalendarModule({
         });
     }, [calendarDays]);
 
+    /** 當月單日最高支出，作為熱區分級的基準 */
+    const monthMaxExpense = useMemo(() => {
+        let max = 0;
+        for (const [dateKey, entry] of dailyData) {
+            if (dayjs(dateKey).isSame(currentMonth, "month")) {
+                max = Math.max(max, entry.expense);
+            }
+        }
+        return max;
+    }, [dailyData, currentMonth]);
+
+    /** 支出越多底色越深；沒有支出就不上色，不佔用色階 */
+    const heatLevel = useCallback(
+        (expense?: number) => {
+            if (!expense || monthMaxExpense <= 0) {
+                return 0;
+            }
+            const ratio = expense / monthMaxExpense;
+            return Math.min(5, Math.max(1, Math.ceil(ratio * 5)));
+        },
+        [monthMaxExpense],
+    );
+
     // --- 月份汇总 ---
     const monthSummary = useMemo(() => {
         let income = 0;
@@ -168,11 +191,9 @@ export function CalendarModule({
     }, [range]);
 
     return (
-        <div className="rounded-md border p-3 w-full flex flex-col gap-3">
+        <div className="surface p-3 w-full flex flex-col gap-3">
             {/* 标题 */}
-            <h2 className="font-medium text-lg text-center">
-                {t("calendar-view")}
-            </h2>
+            <h2 className="section-title text-center">{t("calendar-view")}</h2>
 
             {/* 月份导航 */}
             <div className="flex items-center justify-between relative">
@@ -352,12 +373,34 @@ export function CalendarModule({
                                     data={data}
                                     fmt={fmt}
                                     reminders={dayReminders}
+                                    heat={
+                                        isCurrentMonth
+                                            ? heatLevel(data?.expense)
+                                            : 0
+                                    }
                                     onDateClick={onDateClick}
                                 />
                             );
                         })}
                     </div>
                 ))}
+
+                {/* 熱區圖例：說明底色深淺代表當日支出多寡 */}
+                {monthMaxExpense > 0 && (
+                    <div className="flex items-center justify-end gap-1.5 pt-2 text-[10px] text-muted-foreground">
+                        <span>{t("less")}</span>
+                        {[1, 2, 3, 4, 5].map((level) => (
+                            <span
+                                key={level}
+                                className="inline-block w-4 h-2.5 rounded-sm border border-border"
+                                style={{
+                                    backgroundColor: `var(--heat-bg-${level})`,
+                                }}
+                            />
+                        ))}
+                        <span>{t("more")}</span>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -370,6 +413,7 @@ function DayCell({
     data,
     fmt,
     reminders,
+    heat,
     onDateClick,
 }: {
     day: dayjs.Dayjs;
@@ -378,6 +422,8 @@ function DayCell({
     data?: { income: number; expense: number };
     fmt: (v: number) => string;
     reminders: Reminder[];
+    /** 支出熱區等級 0~5，0 表示不上色 */
+    heat: number;
     onDateClick?: (date: dayjs.Dayjs) => void;
 }) {
     const [open, setOpen] = useState(false);
@@ -394,16 +440,19 @@ function DayCell({
     const cellClass = cn(
         "flex flex-col items-center py-1 min-h-[52px] rounded-md text-center transition-colors select-none",
         !isCurrentMonth && "opacity-30",
-        isToday && "bg-accent ring-1 ring-accent-foreground/20",
+        // 今天用主色外框標示，不另外換一個顏色
+        isToday && "ring-2 ring-primary",
         isCurrentMonth && onDateClick && "cursor-pointer hover:bg-muted",
     );
+    const cellStyle =
+        heat > 0 ? { backgroundColor: `var(--heat-bg-${heat})` } : undefined;
 
     const content = (
         <>
             <span
                 className={cn(
                     "text-[12px] font-medium leading-none",
-                    isToday && "text-accent-foreground font-bold",
+                    isToday && "text-primary font-bold",
                 )}
             >
                 {day.date()}
@@ -451,6 +500,7 @@ function DayCell({
             // biome-ignore lint/a11y/useKeyWithClickEvents: calendar day cell
             <div
                 className={cellClass}
+                style={cellStyle}
                 onClick={() => isCurrentMonth && onDateClick?.(day)}
             >
                 {content}
@@ -465,6 +515,7 @@ function DayCell({
                 {/* biome-ignore lint/a11y/useKeyWithClickEvents: calendar day cell */}
                 <div
                     className={cellClass}
+                    style={cellStyle}
                     onMouseEnter={() => setOpen(true)}
                     onMouseLeave={() => setOpen(false)}
                     {...(longPressBind ? longPressBind() : {})}

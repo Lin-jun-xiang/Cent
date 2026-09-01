@@ -1,11 +1,14 @@
 import { useIntl } from "@/locale";
 import { cn } from "@/utils";
-import { toFixed, toThousand } from "@/utils/number";
 import Money from "../money";
 
 export const FocusTypes = ["income", "expense", "balance"] as const;
 export type FocusType = (typeof FocusTypes)[number];
 
+/**
+ * 收支別切換：未選中時金額維持語意色（紅／綠）作為識別，
+ * 選中時整顆填入主色，金額改用對比色以保證可讀性
+ */
 export function FocusTypeSelector({
     value: focusType,
     onValueChange: setFocusType,
@@ -16,59 +19,73 @@ export function FocusTypeSelector({
     money: number[];
 }) {
     const t = useIntl();
-    const btnClass = `min-w-[90px] text-sm py-1 flex items-center justify-center  cursor-pointer transition-all duration-200`;
+    const items = [
+        {
+            type: "income" as const,
+            label: t("income"),
+            value: money[0],
+            sign: "+",
+            valueClass: "text-semantic-income-strong",
+        },
+        {
+            type: "expense" as const,
+            label: t("expense"),
+            value: money[1],
+            sign: "-",
+            valueClass: "text-semantic-expense-strong",
+        },
+        {
+            type: "balance" as const,
+            label: t("Balance"),
+            value: money[2],
+            sign: "",
+            valueClass: "text-foreground",
+        },
+    ];
     return (
-        <div className="flex items-center rounded-md shadow border border-input overflow-hidden divide-x">
-            <button
-                type="button"
-                className={cn(
-                    btnClass,
-                    focusType === "income" &&
-                        "!bg-primary !text-primary-foreground [&_span]:text-primary-foreground/80",
-                )}
-                onClick={() => {
-                    setFocusType("income");
-                }}
-            >
-                <div className="flex flex-col items-center justify-center">
-                    <span className="text-semantic-income">
-                        +<Money value={money[0]} />
-                    </span>
-                    <div className="text-[10px] opacity-60"> {t("income")}</div>
-                </div>
-            </button>
-            <button
-                type="button"
-                className={cn(
-                    btnClass,
-                    focusType === "expense" &&
-                        "!bg-primary !text-primary-foreground [&_span]:text-primary-foreground/80",
-                )}
-                onClick={() => setFocusType("expense")}
-            >
-                <div className="flex flex-col items-center justify-center">
-                    <span className="text-semantic-expense">
-                        -<Money value={money[1]} />
-                    </span>
-                    <div className="text-[10px] opacity-60">{t("expense")}</div>
-                </div>
-            </button>
-            <button
-                type="button"
-                className={cn(
-                    btnClass,
-                    focusType === "balance" &&
-                        "!bg-primary !text-primary-foreground",
-                )}
-                onClick={() => setFocusType("balance")}
-            >
-                <div className="flex flex-col items-center justify-center">
-                    <span>
-                        <Money value={money[2]} />
-                    </span>
-                    <div className="text-[10px] opacity-60">{t("Balance")}</div>
-                </div>
-            </button>
+        <div className="flex items-center gap-1 p-1 rounded-full border border-border bg-card shadow-[var(--shadow-card)]">
+            {items.map((item) => {
+                const selected = focusType === item.type;
+                return (
+                    <button
+                        key={item.type}
+                        type="button"
+                        aria-pressed={selected}
+                        className={cn(
+                            "min-w-[86px] px-3 py-1 rounded-full flex flex-col items-center justify-center cursor-pointer transition-colors",
+                            selected
+                                ? "bg-primary text-primary-foreground"
+                                : "hover:bg-muted",
+                        )}
+                        onClick={() => setFocusType(item.type)}
+                    >
+                        <span
+                            className={cn(
+                                "text-sm font-semibold tnum",
+                                selected
+                                    ? "text-primary-foreground"
+                                    : item.valueClass,
+                            )}
+                        >
+                            {item.sign}
+                            <Money
+                                value={item.value}
+                                largeAmountThreshold={100000}
+                            />
+                        </span>
+                        <span
+                            className={cn(
+                                "text-[10px]",
+                                selected
+                                    ? "text-primary-foreground/75"
+                                    : "text-muted-foreground",
+                            )}
+                        >
+                            {item.label}
+                        </span>
+                    </button>
+                );
+            })}
         </div>
     );
 }
