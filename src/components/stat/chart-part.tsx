@@ -336,6 +336,11 @@ export function useChartPart({
                                 }
                                 dimension={dimension}
                                 onSeeDetails={(item) => {
+                                    // 依使用者的維度下，item.id 是記帳者而不是分類
+                                    if (dimension === "user") {
+                                        seeDetails({ creators: [item.id] });
+                                        return;
+                                    }
                                     seeDetails({
                                         categories: categories
                                             .filter(
