@@ -1,113 +1,109 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import WordCloud from "wordcloud";
-import useResize from "@/hooks/use-resize";
-import { useTheme } from "@/hooks/use-theme";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 import { useIntl } from "@/locale";
 import { cn } from "@/utils";
-import { getCSSVariable } from "@/utils/color";
 import { processText } from "@/utils/word";
 import { MysteryLoading } from "../loading/mystery";
 
 type WordCut = Awaited<ReturnType<typeof processText>>;
 
-const DPR = window.devicePixelRatio || 2;
 /**
- * 詞雲高度固定
+ * 詞雲最多顯示幾個詞
  *
- * 早期把 canvas 高度綁在量測結果上，而 canvas 又以 h-full 撐開父層，
- * 造成「量測 → 改 canvas 尺寸 → 版面變動 → 重新量測」的迴圈，畫面會一直抖動
+ * 之前取 150 個並交給 canvas 版詞雲做碰撞排版，光是放不下的詞就要把所有位置試完，
+ * 在手機上會把主執行緒佔住；實際上超過 40 個詞已經看不出資訊量差異
  */
-const CLOUD_HEIGHT = 200;
+const MAX_WORDS = 40;
 
-const PALETTE_VARS = [
-    "--category-color-1",
-    "--category-color-2",
-    "--category-color-3",
-    "--category-color-4",
-    "--category-color-5",
-    "--category-color-6",
-    "--category-color-7",
-    "--category-color-8",
-    "--category-color-other",
+/** 字級階梯：由詞頻決定，用 sqrt 讓面積感受接近比例 */
+const MIN_SIZE = 13;
+const MAX_SIZE = 30;
+
+/** 依排名取色，色相順序與圖表一致 */
+const PALETTE = [
+    "var(--category-color-1)",
+    "var(--category-color-2)",
+    "var(--category-color-3)",
+    "var(--category-color-4)",
+    "var(--category-color-5)",
+    "var(--category-color-6)",
+    "var(--category-color-7)",
+    "var(--category-color-8)",
 ];
 
 /**
- * 詞 → 顏色的固定對照表
+ * 把「由大到小」的清單重新排列成大小交錯
  *
- * @param theme 淺／深色會讀到不同的一組系列色，所以要跟著主題重新建立
+ * 直接照詞頻排會讓大字全部擠在左上角；從頭尾交替取用可以讓視覺重量分散開來
  */
-function buildColorMap(data: WordCut, theme: string) {
-    const palette = PALETTE_VARS.map((v) => getCSSVariable(v)).filter(Boolean);
-    const map = new Map<string, string>();
-    data.forEach(([word], index) => {
-        map.set(
-            String(word),
-            palette[index % palette.length] || "currentColor",
-        );
-    });
-    if (palette.length === 0) {
-        console.warn(`word cloud palette is empty in ${theme} theme`);
+function interleave<T>(list: T[]) {
+    const result: T[] = [];
+    let head = 0;
+    let tail = list.length - 1;
+    while (head <= tail) {
+        result.push(list[head]);
+        head += 1;
+        if (head <= tail) {
+            result.push(list[tail]);
+            tail -= 1;
+        }
     }
-    return map;
+    return result;
 }
 
-function TextCloud({ data, className }: { data: WordCut; className?: string }) {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [wrapper, setWrapper] = useState<HTMLDivElement | null>(null);
-    const [width, setWidth] = useState(0);
-    const { theme } = useTheme();
+/**
+ * 排版式詞雲
+ *
+ * 不用 canvas：沒有清空重繪造成的閃爍、沒有碰撞搜尋的運算量，
+ * 而且每個詞都是真正的文字（可點擊、可讀屏、可選取），點一下就用該詞去搜尋
+ */
+function TextCloud({ data }: { data: WordCut }) {
+    const navigate = useNavigate();
+    const t = useIntl();
 
-    // 只觀測寬度：高度是固定值，才不會和版面互相牽動
-    const onResize = useCallback((sizer: () => { width: number }) => {
-        const next = Math.round(sizer().width);
-        // 小於 2px 的變化不重繪，避免捲軸出現／消失時反覆觸發
-        setWidth((prev) => (Math.abs(prev - next) < 2 ? prev : next));
-    }, []);
-    useResize(wrapper, onResize);
-
-    /** 依詞頻排名指定固定顏色，重繪時不會換色 */
-    const colorOf = useMemo(
-        () => buildColorMap(data, theme),
-        // theme 變化時要重新讀取 CSS 變數（深淺色是兩組系列色）
-        [data, theme],
-    );
-
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas || width === 0 || data.length === 0) {
-            return;
-        }
-        canvas.width = Math.round(width * DPR);
-        canvas.height = Math.round(CLOUD_HEIGHT * DPR);
-        const max = data[0][1] || 1;
-        // 停掉上一輪還沒畫完的動畫，否則兩次繪製會疊在一起
-        WordCloud.stop();
-        WordCloud(canvas, {
-            list: data,
-            gridSize: Math.max(8, Math.round(width / 40)),
-            weightFactor: (size) =>
-                Math.max((size / max) * 40, 11) * (width / 320) * DPR,
-            fontFamily: "sans-serif",
-            fontWeight: "600",
-            color: (word) => colorOf.get(String(word)) ?? "currentColor",
-            backgroundColor: "transparent",
-            // 中文旋轉後不好讀；固定不旋轉、不打亂順序，讓每次重繪結果一致
-            rotateRatio: 0,
-            shuffle: false,
-            drawOutOfBound: false,
-        });
-        return () => {
-            WordCloud.stop();
-        };
-    }, [data, width, colorOf]);
+    const words = useMemo(() => {
+        const top = data.slice(0, MAX_WORDS);
+        const max = top[0]?.[1] || 1;
+        const min = top[top.length - 1]?.[1] || 1;
+        const span = Math.max(1, max - min);
+        const sized = top.map(([word, count], index) => ({
+            word: String(word),
+            count,
+            // 以 sqrt 縮放，字級不會被單一極高頻詞拉到極端
+            size:
+                MIN_SIZE +
+                (MAX_SIZE - MIN_SIZE) * Math.sqrt((count - min) / span),
+            color: PALETTE[index % PALETTE.length],
+            rank: index,
+        }));
+        return interleave(sized);
+    }, [data]);
 
     return (
-        <div
-            ref={setWrapper}
-            className={cn("relative w-full", className)}
-            style={{ height: CLOUD_HEIGHT }}
-        >
-            <canvas ref={canvasRef} className="w-full h-full" />
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 py-2">
+            {words.map((item) => (
+                <button
+                    key={item.word}
+                    type="button"
+                    title={t("total-records", { n: item.count })}
+                    className={cn(
+                        "leading-tight rounded px-0.5 cursor-pointer transition-opacity hover:opacity-70",
+                        // 高頻詞加粗，讓層次不只靠字級
+                        item.rank < 6 ? "font-bold" : "font-medium",
+                    )}
+                    style={{
+                        fontSize: `${item.size.toFixed(1)}px`,
+                        color: item.color,
+                    }}
+                    onClick={() => {
+                        navigate("/search", {
+                            state: { filter: { comment: item.word } },
+                        });
+                    }}
+                >
+                    {item.word}
+                </button>
+            ))}
         </div>
     );
 }
@@ -115,15 +111,38 @@ function TextCloud({ data, className }: { data: WordCut; className?: string }) {
 export function AnalysisCloud({ bills }: { bills?: { comment?: string }[] }) {
     const t = useIntl();
     const [wordCut, setWordCut] = useState<WordCut>();
+
+    /**
+     * 以備註內容本身作為依賴
+     *
+     * bills 陣列的參照每次重算都會變，但內容常常一模一樣；
+     * 用文字內容比對可以避免重複跑 jieba 分詞（那是最貴的一步）
+     */
+    const text = useMemo(
+        () =>
+            (bills ?? [])
+                .map(({ comment }) => comment)
+                .filter((v): v is string => Boolean(v))
+                .join("\n"),
+        [bills],
+    );
+
     useEffect(() => {
-        const texts: string[] = [];
-        bills?.forEach(({ comment }) => {
-            if (comment !== undefined) {
-                texts.push(comment);
+        if (text.length === 0) {
+            setWordCut([]);
+            return;
+        }
+        let cancelled = false;
+        processText(text, MAX_WORDS).then((list) => {
+            if (!cancelled) {
+                setWordCut(list);
             }
-        }, []);
-        processText(texts).then(setWordCut);
-    }, [bills]);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [text]);
+
     return (
         <div className="surface p-3 w-full flex flex-col relative">
             <h2 className="section-title text-center py-1">
